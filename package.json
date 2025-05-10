@@ -26,7 +26,8 @@
   },
   "dependencies": {
     "@simplewebauthn/types": "^12.0.0",
-    "@tauri-apps/api": ">=2.0.0-beta.6"
+    "@tauri-apps/api": ">=2.0.0-beta.6",
+    "prettier": "^3.5.3"
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^11.1.6",
