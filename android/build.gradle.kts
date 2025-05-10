@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "de.plugin.passkey"
+    namespace = "de.plugin.webauthn"
     compileSdk = 34
 
     defaultConfig {

@@ -1,4 +1,4 @@
-package de.plugin.passkey
+package de.plugin.webauthn
 
 import android.app.Activity
 import app.tauri.annotation.Command

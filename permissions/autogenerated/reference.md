@@ -18,7 +18,7 @@ Default permissions for the plugin
 <tr>
 <td>
 
-`passkey:allow-ping`
+`webauthn:allow-ping`
 
 </td>
 <td>
@@ -31,7 +31,7 @@ Enables the ping command without any pre-configured scope.
 <tr>
 <td>
 
-`passkey:deny-ping`
+`webauthn:deny-ping`
 
 </td>
 <td>

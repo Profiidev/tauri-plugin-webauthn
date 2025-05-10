@@ -5,8 +5,8 @@ use webauthn_rs_proto::{
   RegisterPublicKeyCredential,
 };
 
-use crate::PasskeyExt;
 use crate::Result;
+use crate::WebauthnExt;
 
 #[command]
 pub(crate) async fn register<R: Runtime>(
@@ -14,7 +14,7 @@ pub(crate) async fn register<R: Runtime>(
   origin: Url,
   options: PublicKeyCredentialCreationOptions,
 ) -> Result<RegisterPublicKeyCredential> {
-  app.passkey().register(origin, options).await
+  app.webauthn().register(origin, options).await
 }
 
 #[command]
@@ -23,5 +23,5 @@ pub(crate) async fn authenticate<R: Runtime>(
   origin: Url,
   options: PublicKeyCredentialRequestOptions,
 ) -> Result<PublicKeyCredential> {
-  app.passkey().authenticate(origin, options).await
+  app.webauthn().authenticate(origin, options).await
 }

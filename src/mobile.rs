@@ -7,24 +7,24 @@ use tauri::{
 use crate::models::*;
 
 #[cfg(target_os = "ios")]
-tauri::ios_plugin_binding!(init_plugin_passkey);
+tauri::ios_plugin_binding!(init_plugin_webauthn);
 
 // initializes the Kotlin or Swift plugin classes
 pub fn init<R: Runtime, C: DeserializeOwned>(
   _app: &AppHandle<R>,
   api: PluginApi<R, C>,
-) -> crate::Result<Passkey<R>> {
+) -> crate::Result<Webauthn<R>> {
   #[cfg(target_os = "android")]
-  let handle = api.register_android_plugin("de.plugin.passkey", "ExamplePlugin")?;
+  let handle = api.register_android_plugin("de.plugin.webauthn", "ExamplePlugin")?;
   #[cfg(target_os = "ios")]
-  let handle = api.register_ios_plugin(init_plugin_passkey)?;
-  Ok(Passkey(handle))
+  let handle = api.register_ios_plugin(init_plugin_webauthn)?;
+  Ok(Webauthn(handle))
 }
 
-/// Access to the passkey APIs.
-pub struct Passkey<R: Runtime>(PluginHandle<R>);
+/// Access to the webauthn APIs.
+pub struct Webauthn<R: Runtime>(PluginHandle<R>);
 
-impl<R: Runtime> Passkey<R> {
+impl<R: Runtime> Webauthn<R> {
   pub fn ping(&self, payload: PingRequest) -> crate::Result<PingResponse> {
     self
       .0

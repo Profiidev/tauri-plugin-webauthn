@@ -17,34 +17,34 @@ mod models;
 pub use error::{Error, Result};
 
 #[cfg(desktop)]
-use desktop::Passkey;
+use desktop::Webauthn;
 #[cfg(mobile)]
-use mobile::Passkey;
+use mobile::Webauthn;
 
-/// Extensions to [`tauri::App`], [`tauri::AppHandle`] and [`tauri::Window`] to access the passkey APIs.
-pub trait PasskeyExt<R: Runtime> {
-  fn passkey(&self) -> &Passkey<R>;
+/// Extensions to [`tauri::App`], [`tauri::AppHandle`] and [`tauri::Window`] to access the webauthn APIs.
+pub trait WebauthnExt<R: Runtime> {
+  fn webauthn(&self) -> &Webauthn<R>;
 }
 
-impl<R: Runtime, T: Manager<R>> crate::PasskeyExt<R> for T {
-  fn passkey(&self) -> &Passkey<R> {
-    self.state::<Passkey<R>>().inner()
+impl<R: Runtime, T: Manager<R>> crate::WebauthnExt<R> for T {
+  fn webauthn(&self) -> &Webauthn<R> {
+    self.state::<Webauthn<R>>().inner()
   }
 }
 
 /// Initializes the plugin.
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
-  Builder::new("passkey")
+  Builder::new("webauthn")
     .invoke_handler(tauri::generate_handler![
       commands::register,
       commands::authenticate
     ])
     .setup(|app, api| {
       #[cfg(mobile)]
-      let passkey = mobile::init(app, api)?;
+      let webauthn = mobile::init(app, api)?;
       #[cfg(desktop)]
-      let passkey = desktop::init(app, api)?;
-      app.manage(passkey);
+      let webauthn = desktop::init(app, api)?;
+      app.manage(webauthn);
       Ok(())
     })
     .build()

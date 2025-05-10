@@ -2,14 +2,14 @@
 members = ["examples/positron/frontend/src-tauri"]
 
 [package]
-name = "tauri-plugin-passkey"
+name = "tauri-plugin-webauthn"
 version = "0.1.0"
 authors = ["You"]
 description = ""
 edition = "2021"
 rust-version = "1.81"
 exclude = ["/examples", "/dist-js", "/guest-js", "/node_modules"]
-links = "tauri-plugin-passkey"
+links = "tauri-plugin-webauthn"
 
 [dependencies]
 tauri = { version = "2.5.0" }

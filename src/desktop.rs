@@ -17,15 +17,15 @@ use crate::FingerprintEnrollmentFeedback;
 pub fn init<R: Runtime, C: DeserializeOwned>(
   app: &AppHandle<R>,
   _api: PluginApi<R, C>,
-) -> crate::Result<Passkey<R>> {
-  Ok(Passkey(app.clone()))
+) -> crate::Result<Webauthn<R>> {
+  Ok(Webauthn(app.clone()))
 }
 
-/// Access to the passkey APIs.
+/// Access to the webauthn APIs.
 #[derive(Debug)]
-pub struct Passkey<R: Runtime>(AppHandle<R>);
+pub struct Webauthn<R: Runtime>(AppHandle<R>);
 
-impl<R: Runtime> Passkey<R> {
+impl<R: Runtime> Webauthn<R> {
   pub async fn register(
     &self,
     origin: Url,
@@ -53,7 +53,7 @@ impl<R: Runtime> Passkey<R> {
   }
 }
 
-impl<R: Runtime> UiCallback for Passkey<R> {
+impl<R: Runtime> UiCallback for Webauthn<R> {
   fn fingerprint_enrollment_feedback(
     &self,
     remaining_samples: u32,
@@ -66,7 +66,7 @@ impl<R: Runtime> UiCallback for Passkey<R> {
       feedback
     );
     if let Err(err) = self.0.emit(
-      "webauthn|fingerprint_enrollment_feedback",
+      "plugin:webauthn|fingerprint_enrollment_feedback",
       FingerprintEnrollmentFeedback {
         remaining_samples,
         feedback: feedback.map(|f| f as u8),
@@ -82,7 +82,7 @@ impl<R: Runtime> UiCallback for Passkey<R> {
   fn processing(&self) {
     #[cfg(feature = "log")]
     log::debug!("Processing...");
-    if let Err(err) = self.0.emit("webauthn|processing", ()) {
+    if let Err(err) = self.0.emit("plugin:webauthn|processing", ()) {
       #[cfg(feature = "log")]
       log::error!("Failed to emit processing: {:?}", err);
       #[cfg(not(feature = "log"))]
@@ -97,7 +97,7 @@ impl<R: Runtime> UiCallback for Passkey<R> {
   fn request_touch(&self) {
     #[cfg(feature = "log")]
     log::debug!("Requesting touch...");
-    if let Err(err) = self.0.emit("webauthn|request_touch", ()) {
+    if let Err(err) = self.0.emit("plugin:webauthn|request_touch", ()) {
       #[cfg(feature = "log")]
       log::error!("Failed to emit request touch: {:?}", err);
       #[cfg(not(feature = "log"))]
