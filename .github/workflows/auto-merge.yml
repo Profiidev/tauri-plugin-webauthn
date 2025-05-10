@@ -1,0 +1,21 @@
+name: Dependabot Auto Merge
+
+on:
+  pull_request_target:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  dependabot:
+    runs-on: ubuntu-latest
+    if: ${{ github.actor == 'dependabot[bot]' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Enable auto-merge for PR
+        run: gh pr merge ${{ github.event.pull_request.number }} --auto --squash
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}

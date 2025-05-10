@@ -1,0 +1,45 @@
+name: Checks and Validation
+on:
+  pull_request:
+
+jobs:
+  linters:
+    name: Run linters
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PERSONAL_TOKEN }}
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+          version: 1.0
+
+      - name: Cache cargo and rust files
+        id: rust_cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+          shared-key: "linter_cache"
+      - uses: bahmutov/npm-install@v1
+
+      - name: Set frontend env
+        run: |
+          printf "PUBLIC_IS_APP=false\nPUBLIC_BACKEND_URL=http://localhost" > frontend/.env
+      - name: Generate svelte data
+        run: |
+          cd frontend && npm run sync
+
+      - name: Run linters
+        uses: profiidev/rust-lint-action@v3
+        with:
+          rustfmt: true
+          clippy: true
+          auto_fix: true
+          prettier: true
+          prettier_extensions: "css,html,js,json,jsx,md,sass,scss,ts,tsx,vue,yaml,yml,svelte"
