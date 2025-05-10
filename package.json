@@ -1,4 +1,7 @@
 {
+  "workspaces": [
+    "examples/positron/frontend"
+  ],
   "name": "tauri-plugin-passkey-api",
   "version": "0.1.0",
   "author": "You",

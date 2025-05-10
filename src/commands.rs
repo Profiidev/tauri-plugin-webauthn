@@ -1,13 +1,27 @@
-use tauri::{AppHandle, command, Runtime};
+use tauri::Url;
+use tauri::{command, AppHandle, Runtime};
+use webauthn_rs_proto::{
+  PublicKeyCredential, PublicKeyCredentialCreationOptions, PublicKeyCredentialRequestOptions,
+  RegisterPublicKeyCredential,
+};
 
-use crate::models::*;
-use crate::Result;
 use crate::PasskeyExt;
+use crate::Result;
 
 #[command]
-pub(crate) async fn ping<R: Runtime>(
-    app: AppHandle<R>,
-    payload: PingRequest,
-) -> Result<PingResponse> {
-    app.passkey().ping(payload)
+pub(crate) async fn register<R: Runtime>(
+  app: AppHandle<R>,
+  origin: Url,
+  options: PublicKeyCredentialCreationOptions,
+) -> Result<RegisterPublicKeyCredential> {
+  app.passkey().register(origin, options).await
+}
+
+#[command]
+pub(crate) async fn authenticate<R: Runtime>(
+  app: AppHandle<R>,
+  origin: Url,
+  options: PublicKeyCredentialRequestOptions,
+) -> Result<PublicKeyCredential> {
+  app.passkey().authenticate(origin, options).await
 }

@@ -35,7 +35,10 @@ impl<R: Runtime, T: Manager<R>> crate::PasskeyExt<R> for T {
 /// Initializes the plugin.
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
   Builder::new("passkey")
-    .invoke_handler(tauri::generate_handler![commands::ping])
+    .invoke_handler(tauri::generate_handler![
+      commands::register,
+      commands::authenticate
+    ])
     .setup(|app, api| {
       #[cfg(mobile)]
       let passkey = mobile::init(app, api)?;
