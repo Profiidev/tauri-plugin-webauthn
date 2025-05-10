@@ -4,7 +4,8 @@ Default permissions for the plugin
 
 #### This default permission set includes the following:
 
-- `allow-ping`
+- `allow-register`
+- `allow-authenticate`
 
 ## Permission Table
 
@@ -18,12 +19,12 @@ Default permissions for the plugin
 <tr>
 <td>
 
-`webauthn:allow-ping`
+`webauthn:allow-authenticate`
 
 </td>
 <td>
 
-Enables the ping command without any pre-configured scope.
+Enables the authenticate command without any pre-configured scope.
 
 </td>
 </tr>
@@ -31,12 +32,38 @@ Enables the ping command without any pre-configured scope.
 <tr>
 <td>
 
-`webauthn:deny-ping`
+`webauthn:deny-authenticate`
 
 </td>
 <td>
 
-Denies the ping command without any pre-configured scope.
+Denies the authenticate command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`webauthn:allow-register`
+
+</td>
+<td>
+
+Enables the register command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`webauthn:deny-register`
+
+</td>
+<td>
+
+Denies the register command without any pre-configured scope.
 
 </td>
 </tr>
