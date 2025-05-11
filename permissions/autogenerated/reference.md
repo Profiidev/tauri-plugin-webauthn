@@ -67,4 +67,30 @@ Denies the register command without any pre-configured scope.
 
 </td>
 </tr>
+
+<tr>
+<td>
+
+`webauthn:allow-send-pin`
+
+</td>
+<td>
+
+Enables the send_pin command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`webauthn:deny-send-pin`
+
+</td>
+<td>
+
+Denies the send_pin command without any pre-configured scope.
+
+</td>
+</tr>
 </table>
