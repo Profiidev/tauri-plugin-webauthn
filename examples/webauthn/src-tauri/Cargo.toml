@@ -24,3 +24,5 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tauri-plugin-webauthn = { path = "../../../" }
 tauri-plugin-log = "2"
+tauri-plugin-http = { version = "2", features = ["json"] }
+webauthn-rs-proto = "0.5.1"

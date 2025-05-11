@@ -1,48 +1,71 @@
 <script lang="ts">
-  import { invoke } from "@tauri-apps/api/core";
+  import type { PublicKeyCredentialCreationOptionsJSON } from '@simplewebauthn/types';
+  import { invoke } from '@tauri-apps/api/core';
+  import { onMount } from 'svelte';
+  import { register, authenticate, registerListener, WebauthnEventType, sendPin } from 'tauri-plugin-webauthn-api';
 
-  let name = $state("");
-  let greetMsg = $state("");
+  let reg_name = $state('');
+  let auth_name = $state('');
+  let pin = $state('');
+  let status = $state('No status yet');
 
-  async function greet(event: Event) {
-    event.preventDefault();
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    greetMsg = await invoke("greet", { name });
+  const reg = async () => {
+    status = 'Requesting registration information...';
+    let options: PublicKeyCredentialCreationOptionsJSON = await invoke("reg_start", { name: reg_name });
+
+    status = 'Registration options received, now calling register()...';
+    let response = await register("https://webauthn.io", options);
+
+    status = 'Registration response received, now calling verification...';
+    await invoke("reg_finish", { username: reg_name, response });
+
+    status = 'Registration successful!';
+  };
+
+  const auth = async () => {
+    //let reg = await authenticate();
+  };
+
+  const pinSend = async () => {
+    status = 'Sending PIN...';
+    await sendPin(pin);
+    status = 'PIN sent!';
   }
+
+  onMount(() => {
+    registerListener((event) => {
+      switch (event.type) {
+        case WebauthnEventType.Processing:
+          status = 'Processing...';
+          break;
+        case WebauthnEventType.RequestTouch:
+          status = 'Please touch the device...';
+          break;
+        case WebauthnEventType.RequestPin:
+          status = 'Please enter the PIN...';
+          break;
+        case WebauthnEventType.FingerprintEnrollmentFeedback:
+          status = `Fingerprint enrollment remaining: ${event.remainingSamples}, feedback: ${event.feedback}`;
+          break;
+      }
+    })
+  });
 </script>
 
 <main class="container">
-  <h1>Welcome to Tauri + Svelte</h1>
-
-  <div class="row">
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="/vite.svg" class="logo vite" alt="Vite Logo" />
-    </a>
-    <a href="https://tauri.app" target="_blank">
-      <img src="/tauri.svg" class="logo tauri" alt="Tauri Logo" />
-    </a>
-    <a href="https://kit.svelte.dev" target="_blank">
-      <img src="/svelte.svg" class="logo svelte-kit" alt="SvelteKit Logo" />
-    </a>
-  </div>
-  <p>Click on the Tauri, Vite, and SvelteKit logos to learn more.</p>
-
-  <form class="row" onsubmit={greet}>
-    <input id="greet-input" placeholder="Enter a name..." bind:value={name} />
-    <button type="submit">Greet</button>
+  <form class="row">
+    <input class="greet-input" placeholder="Enter a username..." bind:value={reg_name} />
+    <button onclick={reg}>Register</button>
+    <button onclick={auth}>Authenticate</button>
   </form>
-  <p>{greetMsg}</p>
+  <p>Status: {status}</p>
+  <form class="row">
+    <input class="greet-input" placeholder="Enter a pin..." type="password" bind:value={pin} />
+    <button onclick={pinSend}>Send</button>
+  </form>
 </main>
 
 <style>
-.logo.vite:hover {
-  filter: drop-shadow(0 0 2em #747bff);
-}
-
-.logo.svelte-kit:hover {
-  filter: drop-shadow(0 0 2em #ff3e00);
-}
-
 :root {
   font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
   font-size: 16px;
@@ -68,34 +91,9 @@
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: 0.75s;
-}
-
-.logo.tauri:hover {
-  filter: drop-shadow(0 0 2em #24c8db);
-}
-
 .row {
   display: flex;
   justify-content: center;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
-}
-
-h1 {
-  text-align: center;
 }
 
 input,
@@ -129,7 +127,7 @@ button {
   outline: none;
 }
 
-#greet-input {
+.greet-input {
   margin-right: 5px;
 }
 
@@ -137,10 +135,6 @@ button {
   :root {
     color: #f6f6f6;
     background-color: #2f2f2f;
-  }
-
-  a:hover {
-    color: #24c8db;
   }
 
   input,
