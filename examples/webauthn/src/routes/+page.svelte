@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { PublicKeyCredentialCreationOptionsJSON } from '@simplewebauthn/types';
+  import type { PublicKeyCredentialCreationOptionsJSON, PublicKeyCredentialRequestOptionsJSON } from '@simplewebauthn/types';
   import { invoke } from '@tauri-apps/api/core';
   import { onMount } from 'svelte';
   import { register, authenticate, registerListener, WebauthnEventType, sendPin } from 'tauri-plugin-webauthn-api';
@@ -23,7 +23,17 @@
   };
 
   const auth = async () => {
-    //let reg = await authenticate();
+    status = 'Requesting authentication information...';
+    let options: PublicKeyCredentialRequestOptionsJSON = await invoke("auth_start", { name: auth_name });
+    console.log(options);
+
+    status = 'Authentication options received, now calling authenticate()...';
+    let response = await authenticate("https://webauthn.io", options);
+
+    status = 'Authentication response received, now calling verification...';
+    await invoke("auth_finish", { username: auth_name, response });
+
+    status = 'Authentication successful!';
   };
 
   const pinSend = async () => {
