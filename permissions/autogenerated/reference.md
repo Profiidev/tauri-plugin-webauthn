@@ -6,6 +6,7 @@ Default permissions for the plugin
 
 - `allow-register`
 - `allow-authenticate`
+- `allow-send-pin`
 
 ## Permission Table
 

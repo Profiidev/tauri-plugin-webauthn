@@ -4,11 +4,20 @@ members = ["examples/positron/frontend/src-tauri"]
 [package]
 name = "tauri-plugin-webauthn"
 version = "0.1.0"
-authors = ["You"]
-description = ""
+authors = ["profidev"]
+description = "a Tauri plugin for WebAuthn"
+license = "MIT"
+repository = "https://github.com/Profiidev/tauri-plugin-webauthn"
 edition = "2021"
 rust-version = "1.81"
-exclude = ["/examples", "/dist-js", "/guest-js", "/node_modules"]
+exclude = [
+  "/examples",
+  "/dist-js",
+  "/guest-js",
+  "/node_modules",
+  "/.github",
+  "/.vscode",
+]
 links = "tauri-plugin-webauthn"
 
 [dependencies]
@@ -22,7 +31,7 @@ webauthn-authenticator-rs = { version = "0.5.0", features = [
 webauthn-rs-proto = { version = "0.5.0", optional = true }
 futures = { version = "0.3.31", optional = true }
 log = { version = "0.4.27", optional = true }
-tokio = "1.45.0"
+tokio = { version = "1.45.0", optional = true }
 
 [build-dependencies]
 tauri-plugin = { version = "2.2.0", features = ["build"] }
@@ -34,5 +43,6 @@ desktop = [
   "dep:webauthn-authenticator-rs",
   "dep:webauthn-rs-proto",
   "dep:futures",
+  "dep:tokio",
 ]
 log = ["dep:log"]
