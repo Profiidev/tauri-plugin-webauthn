@@ -1,6 +1,6 @@
 {
   "workspaces": [
-    "examples/positron/frontend"
+    "examples/webauthn"
   ],
   "name": "tauri-plugin-webauthn-api",
   "version": "0.1.0",

@@ -1,3 +1,6 @@
+[workspace]
+members = ["examples/webauthn/src-tauri"]
+
 [package]
 name = "tauri-plugin-webauthn"
 version = "0.1.0"
