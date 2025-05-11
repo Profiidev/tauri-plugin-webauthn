@@ -319,10 +319,22 @@
           "markdownDescription": "Denies the register command without any pre-configured scope."
         },
         {
-          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-register`\n- `allow-authenticate`",
+          "description": "Enables the send_pin command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-send-pin",
+          "markdownDescription": "Enables the send_pin command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the send_pin command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-send-pin",
+          "markdownDescription": "Denies the send_pin command without any pre-configured scope."
+        },
+        {
+          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-register`\n- `allow-authenticate`\n- `allow-send-pin`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-register`\n- `allow-authenticate`"
+          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-register`\n- `allow-authenticate`\n- `allow-send-pin`"
         }
       ]
     }

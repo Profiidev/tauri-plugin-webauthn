@@ -37,7 +37,8 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
   Builder::new("webauthn")
     .invoke_handler(tauri::generate_handler![
       commands::register,
-      commands::authenticate
+      commands::authenticate,
+      commands::send_pin,
     ])
     .setup(|app, api| {
       #[cfg(mobile)]

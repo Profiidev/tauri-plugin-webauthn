@@ -1,3 +1,3 @@
 [default]
 description = "Default permissions for the plugin"
-permissions = ["allow-register", "allow-authenticate"]
+permissions = ["allow-register", "allow-authenticate", "allow-send-pin"]

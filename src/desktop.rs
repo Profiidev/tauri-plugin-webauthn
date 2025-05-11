@@ -1,6 +1,15 @@
+use std::{
+  fmt::Debug,
+  sync::{
+    mpsc::{channel, Receiver, Sender},
+    Mutex,
+  },
+};
+
 use futures::StreamExt;
 use serde::de::DeserializeOwned;
 use tauri::{plugin::PluginApi, AppHandle, Emitter, Runtime, Url};
+use tokio::task::block_in_place;
 use webauthn_authenticator_rs::{
   ctap2::CtapAuthenticator,
   transport::{AnyTransport, TokenEvent, Transport},
@@ -12,18 +21,29 @@ use webauthn_rs_proto::{
   RegisterPublicKeyCredential,
 };
 
-use crate::FingerprintEnrollmentFeedback;
+use crate::{FingerprintEnrollmentFeedback, WebauthnEvent};
+
+pub const EVENT_NAME: &str = "tauri-plugin-webauthn";
 
 pub fn init<R: Runtime, C: DeserializeOwned>(
   app: &AppHandle<R>,
   _api: PluginApi<R, C>,
 ) -> crate::Result<Webauthn<R>> {
-  Ok(Webauthn(app.clone()))
+  let (pin_sender, pin_receiver) = channel();
+  Ok(Webauthn {
+    app: app.clone(),
+    pin_receiver: Mutex::new(pin_receiver),
+    pin_sender,
+  })
 }
 
 /// Access to the webauthn APIs.
 #[derive(Debug)]
-pub struct Webauthn<R: Runtime>(AppHandle<R>);
+pub struct Webauthn<R: Runtime> {
+  app: AppHandle<R>,
+  pin_receiver: Mutex<Receiver<String>>,
+  pin_sender: Sender<String>,
+}
 
 impl<R: Runtime> Webauthn<R> {
   pub async fn register(
@@ -32,7 +52,7 @@ impl<R: Runtime> Webauthn<R> {
     options: PublicKeyCredentialCreationOptions,
   ) -> crate::Result<RegisterPublicKeyCredential> {
     let mut auth = select_transport(self).await?;
-    auth.perform_register(origin, options, 0).map_err(|e| {
+    auth.perform_register(origin, options, 1000).map_err(|e| {
       #[cfg(feature = "log")]
       log::error!("Failed to register: {:?}", e);
       crate::Error::WebAuthn(e)
@@ -51,6 +71,11 @@ impl<R: Runtime> Webauthn<R> {
       crate::Error::WebAuthn(e)
     })
   }
+
+  pub fn send_pin(&self, pin: String) {
+    #[cfg(feature = "log")]
+    let _ = self.pin_sender.send(pin);
+  }
 }
 
 impl<R: Runtime> UiCallback for Webauthn<R> {
@@ -65,44 +90,36 @@ impl<R: Runtime> UiCallback for Webauthn<R> {
       remaining_samples,
       feedback
     );
-    if let Err(err) = self.0.emit(
-      "plugin:webauthn|fingerprint_enrollment_feedback",
-      FingerprintEnrollmentFeedback {
+    let _ = self.app.emit(
+      EVENT_NAME,
+      WebauthnEvent::FingerprintEnrollmentFeedback(FingerprintEnrollmentFeedback {
         remaining_samples,
         feedback: feedback.map(|f| f as u8),
-      },
-    ) {
-      #[cfg(feature = "log")]
-      log::error!("Failed to emit fingerprint enrollment feedback: {:?}", err);
-      #[cfg(not(feature = "log"))]
-      let _ = err;
-    }
+      }),
+    );
   }
 
   fn processing(&self) {
     #[cfg(feature = "log")]
     log::debug!("Processing...");
-    if let Err(err) = self.0.emit("plugin:webauthn|processing", ()) {
-      #[cfg(feature = "log")]
-      log::error!("Failed to emit processing: {:?}", err);
-      #[cfg(not(feature = "log"))]
-      let _ = err;
-    }
+    let _ = self.app.emit(EVENT_NAME, WebauthnEvent::Processing);
   }
 
   fn request_pin(&self) -> Option<String> {
-    None
+    #[cfg(feature = "log")]
+    log::debug!("Requesting PIN...");
+    let _ = self.app.emit(EVENT_NAME, WebauthnEvent::RequestPin);
+
+    block_in_place(|| {
+      let receiver = self.pin_receiver.lock().unwrap();
+      receiver.recv().ok()
+    })
   }
 
   fn request_touch(&self) {
     #[cfg(feature = "log")]
     log::debug!("Requesting touch...");
-    if let Err(err) = self.0.emit("plugin:webauthn|request_touch", ()) {
-      #[cfg(feature = "log")]
-      log::error!("Failed to emit request touch: {:?}", err);
-      #[cfg(not(feature = "log"))]
-      let _ = err;
-    }
+    let _ = self.app.emit(EVENT_NAME, WebauthnEvent::RequestTouch);
   }
 
   fn cable_qr_code(&self, _: webauthn_authenticator_rs::types::CableRequestType, _: String) {}
