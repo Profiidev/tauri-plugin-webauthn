@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.1] - 2025-05-12
+
+### ⚙️ Miscellaneous Tasks
+
+- Test npm publish
+- Fixed scrripts
+- Added node
+- Removed test
+
+
 ## [0.1.0] - 2025-05-12
 
 ### 🚀 Features
