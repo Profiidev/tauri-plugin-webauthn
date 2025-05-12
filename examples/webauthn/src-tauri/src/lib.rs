@@ -1,6 +1,8 @@
 use std::{collections::HashMap, vec};
 
+use chrono::Local;
 use tauri::{async_runtime::Mutex, State, Url};
+use tauri_plugin_log::{RotationStrategy, Target, TargetKind, TimezoneStrategy};
 use webauthn_rs::{
   prelude::{Passkey, PasskeyAuthentication, PasskeyRegistration, Uuid},
   Webauthn, WebauthnBuilder,
@@ -102,7 +104,17 @@ pub fn run() {
     .manage(Mutex::new(HashMap::<String, PasskeyAuthentication>::new()))
     .manage(Mutex::new(HashMap::<String, PasskeyRegistration>::new()))
     .manage(Mutex::new(HashMap::<String, Passkey>::new()))
-    .plugin(tauri_plugin_log::Builder::new().build())
+    .plugin(
+      tauri_plugin_log::Builder::new()
+        .clear_targets()
+        .target(Target::new(TargetKind::Stdout))
+        .target(Target::new(TargetKind::LogDir {
+          file_name: Some(Local::now().to_rfc3339().replace(":", "-")),
+        }))
+        .rotation_strategy(RotationStrategy::KeepAll)
+        .timezone_strategy(TimezoneStrategy::UseLocal)
+        .build(),
+    )
     .plugin(tauri_plugin_opener::init())
     .plugin(tauri_plugin_webauthn::init())
     .invoke_handler(tauri::generate_handler![
