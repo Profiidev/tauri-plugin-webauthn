@@ -9,7 +9,6 @@
     "core:default",
     "webauthn:default",
     "opener:default",
-    "log:default",
-    "http:default"
+    "log:default"
   ]
 }

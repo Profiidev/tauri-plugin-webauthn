@@ -4,34 +4,33 @@
   import { onMount } from 'svelte';
   import { register, authenticate, registerListener, WebauthnEventType, sendPin } from 'tauri-plugin-webauthn-api';
 
-  let reg_name = $state('');
-  let auth_name = $state('');
+  let name = $state('');
   let pin = $state('');
   let status = $state('No status yet');
 
   const reg = async () => {
     status = 'Requesting registration information...';
-    let options: PublicKeyCredentialCreationOptionsJSON = await invoke("reg_start", { name: reg_name });
+    let options: PublicKeyCredentialCreationOptionsJSON = await invoke("reg_start", { name });
 
     status = 'Registration options received, now calling register()...';
-    let response = await register("https://webauthn.io", options);
+    let response = await register("http://localhost:5173/", options);
 
     status = 'Registration response received, now calling verification...';
-    await invoke("reg_finish", { username: reg_name, response });
+    await invoke("reg_finish", { name, response });
 
     status = 'Registration successful!';
   };
 
   const auth = async () => {
     status = 'Requesting authentication information...';
-    let options: PublicKeyCredentialRequestOptionsJSON = await invoke("auth_start", { name: auth_name });
+    let options: PublicKeyCredentialRequestOptionsJSON = await invoke("auth_start", { name });
     console.log(options);
 
     status = 'Authentication options received, now calling authenticate()...';
-    let response = await authenticate("https://webauthn.io", options);
+    let response = await authenticate("http://localhost:5173/", options);
 
     status = 'Authentication response received, now calling verification...';
-    await invoke("auth_finish", { username: auth_name, response });
+    await invoke("auth_finish", { name, response });
 
     status = 'Authentication successful!';
   };
@@ -64,7 +63,7 @@
 
 <main class="container">
   <form class="row">
-    <input class="greet-input" placeholder="Enter a username..." bind:value={reg_name} />
+    <input class="greet-input" placeholder="Enter a username..." bind:value={name} />
     <button onclick={reg}>Register</button>
     <button onclick={auth}>Authenticate</button>
   </form>

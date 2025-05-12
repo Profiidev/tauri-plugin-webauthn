@@ -1,133 +1,107 @@
-use serde::Serialize;
-use tauri::{
-  async_runtime::{spawn, Mutex},
-  Manager, State,
+use std::{collections::HashMap, vec};
+
+use tauri::{async_runtime::Mutex, State, Url};
+use webauthn_rs::{
+  prelude::{Passkey, PasskeyAuthentication, PasskeyRegistration, Uuid},
+  Webauthn, WebauthnBuilder,
 };
-use tauri_plugin_http::reqwest::Client;
 use webauthn_rs_proto::{
   PublicKeyCredential, PublicKeyCredentialCreationOptions, PublicKeyCredentialRequestOptions,
   RegisterPublicKeyCredential,
 };
 
-#[derive(Serialize)]
-struct RegBody {
-  username: String,
-  hints: Vec<String>,
-  user_verification: String,
-  discoverable_credential: String,
-  attestation: String,
-  attachment: String,
-  algorithms: Vec<String>,
-}
-
-#[derive(Serialize)]
-struct RegFinishBody {
-  username: String,
-  response: RegisterPublicKeyCredential,
-}
-
 #[tauri::command]
 async fn reg_start(
-  client: State<'_, Mutex<Client>>,
+  state: State<'_, Mutex<HashMap<String, PasskeyRegistration>>>,
+  passkeys: State<'_, Mutex<HashMap<String, Passkey>>>,
+  webauthn: State<'_, Webauthn>,
   name: &str,
 ) -> Result<PublicKeyCredentialCreationOptions, ()> {
-  let client = client.lock().await;
-  Ok(
-    client
-      .post("https://webauthn.io/registration/options")
-      .json(&RegBody {
-        username: name.to_string(),
-        hints: vec![],
-        user_verification: "preferred".into(),
-        discoverable_credential: "discouraged".into(),
-        attestation: "none".into(),
-        attachment: "all".into(),
-        algorithms: vec!["ed25519".into(), "es256".into(), "rs256".into()],
-      })
-      .send()
-      .await
-      .expect("Failed to send request")
-      .json()
-      .await
-      .expect("Failed to parse response"),
-  )
+  let passkeys = passkeys.lock().await;
+  let passkey = passkeys.get(name).map(|p| vec![p.cred_id().clone()]);
+
+  let (challenge, state_val) = webauthn
+    .start_passkey_registration(Uuid::new_v4(), name, name, passkey)
+    .expect("Failed to start registration");
+
+  let mut state = state.lock().await;
+  state.insert(name.to_string(), state_val);
+
+  Ok(challenge.public_key)
 }
 
 #[tauri::command]
 async fn reg_finish(
-  client: State<'_, Mutex<Client>>,
-  username: String,
+  state: State<'_, Mutex<HashMap<String, PasskeyRegistration>>>,
+  passkeys: State<'_, Mutex<HashMap<String, Passkey>>>,
+  webauthn: State<'_, Webauthn>,
+  name: &str,
   response: RegisterPublicKeyCredential,
 ) -> Result<(), ()> {
-  let client = client.lock().await;
-  client
-    .post("https://webauthn.io/registration/verification")
-    .json(&RegFinishBody { username, response })
-    .send()
-    .await
-    .expect("Failed to send request");
+  let mut state = state.lock().await;
+  let passkey_reg = state
+    .remove(name)
+    .expect("Failed to get passkey registration state");
+
+  let passkey = webauthn
+    .finish_passkey_registration(&response, &passkey_reg)
+    .expect("Failed to finish registration");
+
+  let mut passkeys = passkeys.lock().await;
+  passkeys.insert(name.to_string(), passkey.clone());
+
   Ok(())
-}
-
-#[derive(Serialize)]
-struct AuthBody {
-  hints: Vec<String>,
-  user_verification: String,
-  username: String,
-}
-
-#[derive(Serialize)]
-struct AuthFinishBody {
-  username: String,
-  response: PublicKeyCredential,
 }
 
 #[tauri::command]
 async fn auth_start(
-  client: State<'_, Mutex<Client>>,
+  webauthn: State<'_, Webauthn>,
+  state: State<'_, Mutex<HashMap<String, PasskeyAuthentication>>>,
+  passkeys: State<'_, Mutex<HashMap<String, Passkey>>>,
   name: &str,
 ) -> Result<PublicKeyCredentialRequestOptions, ()> {
-  let client = client.lock().await;
-  Ok(
-    client
-      .post("https://webauthn.io/authentication/options")
-      .json(&AuthBody {
-        hints: vec![],
-        user_verification: "preferred".into(),
-        username: name.to_string(),
-      })
-      .send()
-      .await
-      .expect("Failed to send request")
-      .json()
-      .await
-      .expect("Failed to parse response"),
-  )
+  let passkeys = passkeys.lock().await;
+  let passkey = passkeys.get(name).expect("Failed to get passkey").clone();
+
+  let (challenge, state_val) = webauthn
+    .start_passkey_authentication(&[passkey])
+    .expect("Failed to start authentication");
+
+  let mut state = state.lock().await;
+  state.insert(name.to_string(), state_val);
+
+  Ok(challenge.public_key)
 }
 
 #[tauri::command]
 async fn auth_finish(
-  client: State<'_, Mutex<Client>>,
-  username: String,
+  webauthn: State<'_, Webauthn>,
+  state: State<'_, Mutex<HashMap<String, PasskeyAuthentication>>>,
+  name: &str,
   response: PublicKeyCredential,
 ) -> Result<(), ()> {
-  let client = client.lock().await;
-  client
-    .post("https://webauthn.io/authentication/verification")
-    .json(&AuthFinishBody { username, response })
-    .send()
-    .await
-    .expect("Failed to send request");
+  let mut state = state.lock().await;
+  let passkey_auth = state
+    .remove(name)
+    .expect("Failed to get passkey authentication state");
+  webauthn
+    .finish_passkey_authentication(&response, &passkey_auth)
+    .expect("Failed to finish authentication");
   Ok(())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
-    .manage(Mutex::new(
-      Client::builder().cookie_store(true).build().unwrap(),
-    ))
-    .plugin(tauri_plugin_http::init())
+    .manage(
+      WebauthnBuilder::new("localhost", &Url::parse("http://localhost:5173/").unwrap())
+        .unwrap()
+        .build()
+        .unwrap(),
+    )
+    .manage(Mutex::new(HashMap::<String, PasskeyAuthentication>::new()))
+    .manage(Mutex::new(HashMap::<String, PasskeyRegistration>::new()))
+    .manage(Mutex::new(HashMap::<String, Passkey>::new()))
     .plugin(tauri_plugin_log::Builder::new().build())
     .plugin(tauri_plugin_opener::init())
     .plugin(tauri_plugin_webauthn::init())
@@ -137,16 +111,6 @@ pub fn run() {
       auth_start,
       auth_finish
     ])
-    .setup(|app| {
-      let handle = app.handle().clone();
-      spawn(async move {
-        // get session cookie
-        let state = handle.state::<Mutex<Client>>();
-        let client = state.lock().await;
-        let _ = client.get("https://webauthn.io").send().await;
-      });
-      Ok(())
-    })
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }
