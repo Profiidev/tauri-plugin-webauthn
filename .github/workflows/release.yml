@@ -34,11 +34,11 @@ jobs:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_API_TOKEN }}
 
       - uses: bahmutov/npm-install@v1
-        # if: ${{ steps.release.outputs.releases_created == 'true' }}
+        if: ${{ steps.release.outputs.releases_created == 'true' }}
         with:
           useLockFile: false
       - run: npm run build
-        # if: ${{ steps.release.outputs.releases_created == 'true' }}
+        if: ${{ steps.release.outputs.releases_created == 'true' }}
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
