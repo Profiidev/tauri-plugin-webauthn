@@ -3,3 +3,6 @@ target/
 .github/
 android/
 permissions/
+.svelte-kit/
+build/
+src-tauri/
