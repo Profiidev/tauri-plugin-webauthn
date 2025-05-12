@@ -24,3 +24,7 @@ publish_allow_dirty = false
 semver_check = true
 
 release_always = false
+
+[[package]]
+name = "webauthn"
+release = false
