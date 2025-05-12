@@ -6,7 +6,10 @@
   "version": "0.1.0",
   "author": "profidev",
   "description": "A Tauri plugin for WebAuthn API",
-  "repository": "github:profiidev/tauri-plugin-webauthn",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/profiidev/tauri-plugin-webauthn.git"
+  },
   "license": "MIT",
   "type": "module",
   "types": "./dist-js/index.d.ts",
