@@ -46,5 +46,3 @@ All notable changes to this project will be documented in this file.
 - Added missing tailwind prettier plugin
 - Fix npm publish
 - Test build
-
-
