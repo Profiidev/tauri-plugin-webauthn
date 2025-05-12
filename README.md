@@ -6,7 +6,7 @@ It is a nearly drop-in replacement for the `@simplewebauthn/browser` package wit
 | Platform | Supported |
 | -------- | --------- |
 | Linux    | ✓         |
-| Windows  | x         |
+| Windows  | ✓         |
 | macOS    | x         |
 | Android  | x         |
 | iOS      | x         |

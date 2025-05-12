@@ -6,16 +6,10 @@ use std::{
   },
 };
 
-use futures::StreamExt;
 use serde::de::DeserializeOwned;
 use tauri::{plugin::PluginApi, AppHandle, Emitter, Runtime, Url};
 use tokio::task::block_in_place;
-use webauthn_authenticator_rs::{
-  ctap2::CtapAuthenticator,
-  transport::{AnyTransport, TokenEvent, Transport},
-  ui::UiCallback,
-  AuthenticatorBackend,
-};
+use webauthn_authenticator_rs::{ui::UiCallback, AuthenticatorBackend};
 use webauthn_rs_proto::{
   PublicKeyCredential, PublicKeyCredentialCreationOptions, PublicKeyCredentialRequestOptions,
   RegisterPublicKeyCredential,
@@ -127,9 +121,16 @@ impl<R: Runtime> UiCallback for Webauthn<R> {
   fn dismiss_qr_code(&self) {}
 }
 
+#[cfg(not(windows))]
 async fn select_transport<U: UiCallback>(
   ui: &'_ U,
 ) -> crate::Result<impl AuthenticatorBackend + '_> {
+  use futures::StreamExt;
+  use webauthn_authenticator_rs::{
+    ctap2::CtapAuthenticator,
+    transport::{AnyTransport, TokenEvent, Transport},
+  };
+
   let reader = AnyTransport::new().await.map_err(|e| {
     #[cfg(feature = "log")]
     log::error!("Failed to create transport: {:?}", e);
@@ -164,4 +165,11 @@ async fn select_transport<U: UiCallback>(
   #[cfg(feature = "log")]
   log::error!("No token found");
   Err(crate::Error::NoToken)
+}
+
+#[cfg(windows)]
+async fn select_transport<U: UiCallback>(
+  _ui: &'_ U,
+) -> crate::Result<impl AuthenticatorBackend + '_> {
+  Ok(webauthn_authenticator_rs::win10::Win10::default())
 }
