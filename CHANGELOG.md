@@ -10,7 +10,6 @@ All notable changes to this project will be documented in this file.
 - Fixed scrripts
 - Added node
 
-
 ## [0.1.0] - 2025-05-12
 
 ### 🚀 Features
@@ -57,8 +56,6 @@ All notable changes to this project will be documented in this file.
 - Fix npm publish
 - Test build
 - Removed test
-- *(tauri-plugin-webauthn)* Release v0.1.0
+- _(tauri-plugin-webauthn)_ Release v0.1.0
 - Added deps for release plz
 - Removed changelog
-
-
