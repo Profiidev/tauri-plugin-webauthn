@@ -44,5 +44,3 @@ All notable changes to this project will be documented in this file.
 - Added missing apt dependencies
 - Added release workflow
 - Added missing tailwind prettier plugin
-
-
