@@ -23,8 +23,8 @@
   ],
   "scripts": {
     "build": "rollup -c",
-    "prepublishOnly": "pnpm build",
-    "pretest": "pnpm build"
+    "prepublishOnly": "npm build",
+    "pretest": "npm build"
   },
   "dependencies": {
     "@simplewebauthn/types": "^12.0.0",
