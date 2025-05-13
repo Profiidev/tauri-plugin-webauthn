@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">webauthn</string>
+    <string name="main_activity_title">webauthn</string>
+</resources>
