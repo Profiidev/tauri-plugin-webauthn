@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.1] - 2025-05-13
+
+### 🚀 Features
+
+- Added android credential manager
+
+### 🐛 Bug Fixes
+
+- Rust mobile code errors
+- Android compile
+- Mobile cmd data transfer not working
+- Made android passkey saving work
+
+### 📚 Documentation
+
+- Added assetslink in example
+- Made android register working
+
+### ⚙️ Miscellaneous Tasks
+
+- Test npm publish
+- Fixed scrripts
+- Added node
+- Removed test
+- Init android in example
+
+
 ## [0.1.0] - 2025-05-12
 
 ### 🚀 Features
