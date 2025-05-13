@@ -17,9 +17,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @TauriPlugin
-class ExamplePlugin(activity: Activity): Plugin(activity) {
+class WebauthnPlugin(activity: Activity): Plugin(activity) {
   private val scope = CoroutineScope(Dispatchers.Main)
   private val credentialManager = CredentialManager.create(activity)
+  private val pluginActivity = activity
   
   @Command
   fun register(invoke: Invoke) {
@@ -32,7 +33,7 @@ class ExamplePlugin(activity: Activity): Plugin(activity) {
     scope.launch {
       try {
         val result = credentialManager.createCredential(
-          activity,
+          pluginActivity,
           createPublicKeyCredentialRequest,
         )
 
@@ -66,7 +67,7 @@ class ExamplePlugin(activity: Activity): Plugin(activity) {
     scope.launch {
       try {
         val result = credentialManager.getCredential(
-          activity,
+          pluginActivity,
           getCredRequest,
         ).credential
 
