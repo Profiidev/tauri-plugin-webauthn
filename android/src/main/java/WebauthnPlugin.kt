@@ -7,6 +7,7 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetPublicKeyCredentialOption
 import androidx.credentials.PublicKeyCredential
+import androidx.credentials.exceptions.CreateCredentialException
 import app.tauri.annotation.Command
 import app.tauri.annotation.TauriPlugin
 import app.tauri.plugin.JSObject
@@ -45,10 +46,10 @@ class WebauthnPlugin(activity: Activity): Plugin(activity) {
             invoke.reject("Invalid credential type")
           }
         }
-      } catch (e: Exception) {
+      } catch (e: CreateCredentialException) {
         // Handle error
         e.printStackTrace()
-        invoke.reject(e.message)
+        invoke.reject(e.type + " " + e.message)
       }
     }
   }
@@ -79,10 +80,10 @@ class WebauthnPlugin(activity: Activity): Plugin(activity) {
             invoke.reject("Invalid credential type")
           }
         }
-      } catch (e: Exception) {
+      } catch (e: CreateCredentialException) {
         // Handle error
         e.printStackTrace()
-        invoke.reject(e.message)
+        invoke.reject(e.type + " " + e.message)
       }
     }
   }

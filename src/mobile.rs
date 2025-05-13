@@ -34,7 +34,7 @@ impl<R: Runtime> Webauthn<R> {
   ) -> crate::Result<RegisterPublicKeyCredential> {
     self
       .0
-      .run_mobile_plugin("register", options)
+      .run_mobile_plugin("register", serde_json::to_string(&options)?)
       .map_err(Into::into)
   }
 
@@ -45,7 +45,7 @@ impl<R: Runtime> Webauthn<R> {
   ) -> crate::Result<PublicKeyCredential> {
     self
       .0
-      .run_mobile_plugin("authenticate", options)
+      .run_mobile_plugin("authenticate", serde_json::to_string(&options)?)
       .map_err(Into::into)
   }
 
