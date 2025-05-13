@@ -28,7 +28,6 @@ All notable changes to this project will be documented in this file.
 - Removed test
 - Init android in example
 
-
 ## [0.1.0] - 2025-05-12
 
 ### 🚀 Features
