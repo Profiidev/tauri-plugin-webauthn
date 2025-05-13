@@ -101,6 +101,9 @@ pub fn run() {
         &Url::parse("https://tauri-plugin-webauthn-example.glitch.me/").unwrap(),
       )
       .unwrap()
+      .append_allowed_origin(
+        &Url::parse("android:apk-key-hash:W8LAR3CdJ3CAVCTuv3_J5fF2iKYGYQhYfKq9ANbOzjI").unwrap(),
+      )
       .build()
       .unwrap(),
     )
