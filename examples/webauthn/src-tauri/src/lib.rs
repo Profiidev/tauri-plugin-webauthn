@@ -96,10 +96,16 @@ async fn auth_finish(
 pub fn run() {
   tauri::Builder::default()
     .manage(
-      WebauthnBuilder::new("localhost", &Url::parse("http://localhost:5173/").unwrap())
-        .unwrap()
-        .build()
-        .unwrap(),
+      WebauthnBuilder::new(
+        "tauri-plugin-webauthn-example.glitch.me",
+        &Url::parse("https://tauri-plugin-webauthn-example.glitch.me/").unwrap(),
+      )
+      .unwrap()
+      .append_allowed_origin(
+        &Url::parse("android:apk-key-hash:W8LAR3CdJ3CAVCTuv3_J5fF2iKYGYQhYfKq9ANbOzjI").unwrap(),
+      )
+      .build()
+      .unwrap(),
     )
     .manage(Mutex::new(HashMap::<String, PasskeyAuthentication>::new()))
     .manage(Mutex::new(HashMap::<String, PasskeyRegistration>::new()))

@@ -25,7 +25,10 @@
     );
 
     status = 'Registration options received, now calling register()...';
-    let response = await register('http://localhost:5173/', options);
+    let response = await register(
+      'https://tauri-plugin-webauthn-example.glitch.me/',
+      options
+    );
 
     status = 'Registration response received, now calling verification...';
     await invoke('reg_finish', { name, response });
@@ -39,10 +42,12 @@
       'auth_start',
       { name }
     );
-    console.log(options);
 
     status = 'Authentication options received, now calling authenticate()...';
-    let response = await authenticate('http://localhost:5173/', options);
+    let response = await authenticate(
+      'https://tauri-plugin-webauthn-example.glitch.me/',
+      options
+    );
 
     status = 'Authentication response received, now calling verification...';
     await invoke('auth_finish', { name, response });
@@ -125,7 +130,6 @@
   }
 
   .row {
-    display: flex;
     justify-content: center;
   }
 

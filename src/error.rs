@@ -9,8 +9,12 @@ pub enum Error {
   #[cfg(mobile)]
   #[error(transparent)]
   PluginInvoke(#[from] tauri::plugin::mobile::PluginInvokeError),
+  #[cfg(desktop)]
   #[error("WebAuthn error: {0:?}")]
   WebAuthn(webauthn_authenticator_rs::error::WebauthnCError),
+  #[cfg(mobile)]
+  #[error(transparent)]
+  SerdeJson(#[from] serde_json::Error),
   #[error("No token found")]
   NoToken,
   #[error("Failed to create authenticator")]
