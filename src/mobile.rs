@@ -1,4 +1,4 @@
-use serde::{de::DeserializeOwned, Serialize};
+use serde::de::DeserializeOwned;
 use tauri::{
   plugin::{PluginApi, PluginHandle},
   AppHandle, Runtime, Url,
@@ -29,31 +29,25 @@ pub struct Webauthn<R: Runtime>(PluginHandle<R>);
 impl<R: Runtime> Webauthn<R> {
   pub async fn register(
     &self,
-    origin: Url,
+    _: Url,
     options: PublicKeyCredentialCreationOptions,
   ) -> crate::Result<RegisterPublicKeyCredential> {
     self
       .0
-      .run_mobile_plugin("register", Payload { origin, options })
+      .run_mobile_plugin("register", options)
       .map_err(Into::into)
   }
 
   pub async fn authenticate(
     &self,
-    origin: Url,
+    _: Url,
     options: PublicKeyCredentialRequestOptions,
   ) -> crate::Result<PublicKeyCredential> {
     self
       .0
-      .run_mobile_plugin("authenticate", Payload { origin, options })
+      .run_mobile_plugin("authenticate", options)
       .map_err(Into::into)
   }
 
   pub fn send_pin(&self, _: String) {}
-}
-
-#[derive(Serialize)]
-struct Payload<T> {
-  origin: Url,
-  options: T,
 }
