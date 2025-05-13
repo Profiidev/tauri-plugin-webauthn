@@ -1,10 +1,12 @@
-use serde::de::DeserializeOwned;
+use serde::{de::DeserializeOwned, Serialize};
 use tauri::{
   plugin::{PluginApi, PluginHandle},
-  AppHandle, Runtime,
+  AppHandle, Runtime, Url,
 };
-
-use crate::models::*;
+use webauthn_rs_proto::{
+  PublicKeyCredential, PublicKeyCredentialCreationOptions, PublicKeyCredentialRequestOptions,
+  RegisterPublicKeyCredential,
+};
 
 #[cfg(target_os = "ios")]
 tauri::ios_plugin_binding!(init_plugin_webauthn);
@@ -15,7 +17,7 @@ pub fn init<R: Runtime, C: DeserializeOwned>(
   api: PluginApi<R, C>,
 ) -> crate::Result<Webauthn<R>> {
   #[cfg(target_os = "android")]
-  let handle = api.register_android_plugin("de.plugin.webauthn", "ExamplePlugin")?;
+  let handle = api.register_android_plugin("de.plugin.webauthn", "WebauthnPlugin")?;
   #[cfg(target_os = "ios")]
   let handle = api.register_ios_plugin(init_plugin_webauthn)?;
   Ok(Webauthn(handle))
@@ -25,10 +27,33 @@ pub fn init<R: Runtime, C: DeserializeOwned>(
 pub struct Webauthn<R: Runtime>(PluginHandle<R>);
 
 impl<R: Runtime> Webauthn<R> {
-  pub fn ping(&self, payload: PingRequest) -> crate::Result<PingResponse> {
+  pub async fn register(
+    &self,
+    origin: Url,
+    options: PublicKeyCredentialCreationOptions,
+  ) -> crate::Result<RegisterPublicKeyCredential> {
     self
       .0
-      .run_mobile_plugin("ping", payload)
+      .run_mobile_plugin("register", Payload { origin, options })
       .map_err(Into::into)
   }
+
+  pub async fn authenticate(
+    &self,
+    origin: Url,
+    options: PublicKeyCredentialRequestOptions,
+  ) -> crate::Result<PublicKeyCredential> {
+    self
+      .0
+      .run_mobile_plugin("authenticate", Payload { origin, options })
+      .map_err(Into::into)
+  }
+
+  pub fn send_pin(&self, _: String) {}
+}
+
+#[derive(Serialize)]
+struct Payload<T> {
+  origin: Url,
+  options: T,
 }

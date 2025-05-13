@@ -9,6 +9,7 @@ pub enum Error {
   #[cfg(mobile)]
   #[error(transparent)]
   PluginInvoke(#[from] tauri::plugin::mobile::PluginInvokeError),
+  #[cfg(desktop)]
   #[error("WebAuthn error: {0:?}")]
   WebAuthn(webauthn_authenticator_rs::error::WebauthnCError),
   #[error("No token found")]

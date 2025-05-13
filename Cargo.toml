@@ -24,6 +24,7 @@ links = "tauri-plugin-webauthn"
 tauri = { version = "2.5.0" }
 serde = "1.0"
 thiserror = "2"
+webauthn-rs-proto = "0.5.0"
 log = { version = "0.4.27", optional = true }
 
 [build-dependencies]
@@ -35,9 +36,12 @@ log = ["dep:log"]
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 webauthn-authenticator-rs = { version = "0.5.0", features = ["nfc", "usb"] }
-webauthn-rs-proto = "0.5.0"
 futures = "0.3.31"
 tokio = "1.45.0"
 
 [target.'cfg(windows)'.dependencies]
-webauthn-authenticator-rs = { version = "0.5.0", features = ["nfc", "usb", "win10"] }
+webauthn-authenticator-rs = { version = "0.5.0", features = [
+  "nfc",
+  "usb",
+  "win10",
+] }
