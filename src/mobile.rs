@@ -5,7 +5,7 @@ use tauri::{
 };
 use webauthn_rs_proto::{
   PublicKeyCredential, PublicKeyCredentialCreationOptions, PublicKeyCredentialRequestOptions,
-  RegisterPublicKeyCredential,
+  RegisterPublicKeyCredential, ResidentKeyRequirement,
 };
 
 #[cfg(target_os = "ios")]
@@ -30,8 +30,12 @@ impl<R: Runtime> Webauthn<R> {
   pub async fn register(
     &self,
     _: Url,
-    options: PublicKeyCredentialCreationOptions,
+    mut options: PublicKeyCredentialCreationOptions,
   ) -> crate::Result<RegisterPublicKeyCredential> {
+    // This is required to make Android save the passkey
+    if let Some(auth) = &mut options.authenticator_selection {
+      auth.resident_key = Some(ResidentKeyRequirement::Preferred);
+    }
     self
       .0
       .run_mobile_plugin("register", serde_json::to_string(&options)?)
