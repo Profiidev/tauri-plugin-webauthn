@@ -1,4 +1,9 @@
 <resources>
     <string name="app_name">webauthn</string>
     <string name="main_activity_title">webauthn</string>
+    <string name="asset_statements" translatable="false">
+    [{
+    \"include\": \"https://tauri-plugin-webauthn-example.glitch.me/.well-known/assetlinks.json\"
+    }]
+    </string>
 </resources>

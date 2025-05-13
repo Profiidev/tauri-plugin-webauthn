@@ -96,10 +96,13 @@ async fn auth_finish(
 pub fn run() {
   tauri::Builder::default()
     .manage(
-      WebauthnBuilder::new("localhost", &Url::parse("http://localhost:5173/").unwrap())
-        .unwrap()
-        .build()
-        .unwrap(),
+      WebauthnBuilder::new(
+        "tauri-plugin-webauthn-example.glitch.me",
+        &Url::parse("https://tauri-plugin-webauthn-example.glitch.me/").unwrap(),
+      )
+      .unwrap()
+      .build()
+      .unwrap(),
     )
     .manage(Mutex::new(HashMap::<String, PasskeyAuthentication>::new()))
     .manage(Mutex::new(HashMap::<String, PasskeyRegistration>::new()))

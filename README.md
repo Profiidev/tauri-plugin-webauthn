@@ -13,6 +13,8 @@ It is a nearly drop-in replacement for the `@simplewebauthn/browser` package wit
 
 ## Requirements
 
+### Android
+
 - Android API 28+ (you need to set this in your project in `src-tauri/gen/android/app/build.gradle.kts`):
   ```
   ...
@@ -26,6 +28,29 @@ It is a nearly drop-in replacement for the `@simplewebauthn/browser` package wit
     ...
   }
   ...
+  ```
+- A `keystore.properties` file in the `src-tauri/gen/android/app` directory. This is required to sign the app. The documentation for this file can be found [here](https://tauri.app/distribute/sign/android/)
+- Additionally you need to define a `assetslink.json` and this needs to be hosted under a domain you own. This is required to verify the app with the webauthn api. The documentation for this file can be found [here](https://developer.android.com/identity/sign-in/credential-manager#add-support-dal) and the file can be generated [here](https://developers.google.com/digital-asset-links/tools/generator). This also needs to be included in you app manifest file at `src-tauri/gen/android/app/src/main/AndroidManifest.xml`:
+  ```xml
+  ...
+  <application>
+    ...
+    <meta-data android:name="asset_statements" android:resource="@string/asset_statements" />
+    ...
+  </application>
+  ...
+  ```
+  and the string resource needs to be defined in `src-tauri/gen/android/app/src/main/res/values/strings.xml`:
+  ```xml
+  <resources>
+    ...
+    <string name="asset_statements" translatable="false">
+    [{
+    \"include\": \"https://your.domain.com/.well-known/assetlinks.json\"
+    }]
+    </string>
+    ...
+  </resources>
   ```
 
 # Usage
