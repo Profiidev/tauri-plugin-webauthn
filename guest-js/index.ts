@@ -5,7 +5,7 @@ import {
   RegistrationResponseJSON
 } from '@simplewebauthn/types';
 import { invoke } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
+import { listen, UnlistenFn } from '@tauri-apps/api/event';
 
 export * as types from '@simplewebauthn/types';
 
@@ -77,8 +77,8 @@ export async function sendPin(pin: string): Promise<void> {
 
 export async function registerListener(
   listener: (event: WebauthnEvent) => void
-): Promise<void> {
-  listen(EVENT_NAME, (event) => {
+): Promise<UnlistenFn> {
+  return listen(EVENT_NAME, (event) => {
     listener(event.payload as WebauthnEvent);
   });
 }
