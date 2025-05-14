@@ -75,6 +75,10 @@ export async function sendPin(pin: string): Promise<void> {
   });
 }
 
+export async function cancelPin(): Promise<void> {
+  return await invoke('plugin:webauthn|send_pin');
+}
+
 export async function registerListener(
   listener: (event: WebauthnEvent) => void
 ): Promise<UnlistenFn> {

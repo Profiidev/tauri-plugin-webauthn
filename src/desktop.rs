@@ -35,8 +35,8 @@ pub fn init<R: Runtime, C: DeserializeOwned>(
 #[derive(Debug)]
 pub struct Webauthn<R: Runtime> {
   app: AppHandle<R>,
-  pin_receiver: Mutex<Receiver<String>>,
-  pin_sender: Sender<String>,
+  pin_receiver: Mutex<Receiver<Option<String>>>,
+  pin_sender: Sender<Option<String>>,
 }
 
 impl<R: Runtime> Webauthn<R> {
@@ -46,7 +46,7 @@ impl<R: Runtime> Webauthn<R> {
     options: PublicKeyCredentialCreationOptions,
   ) -> crate::Result<RegisterPublicKeyCredential> {
     let mut auth = select_transport(self).await?;
-    auth.perform_register(origin, options, 1000).map_err(|e| {
+    auth.perform_register(origin, options, 10000).map_err(|e| {
       #[cfg(feature = "log")]
       log::error!("Failed to register: {:?}", e);
       crate::Error::WebAuthn(e)
@@ -59,14 +59,14 @@ impl<R: Runtime> Webauthn<R> {
     options: PublicKeyCredentialRequestOptions,
   ) -> crate::Result<PublicKeyCredential> {
     let mut auth = select_transport(self).await?;
-    auth.perform_auth(origin, options, 0).map_err(|e| {
+    auth.perform_auth(origin, options, 10000).map_err(|e| {
       #[cfg(feature = "log")]
       log::error!("Failed to authenticate: {:?}", e);
       crate::Error::WebAuthn(e)
     })
   }
 
-  pub fn send_pin(&self, pin: String) {
+  pub fn send_pin(&self, pin: Option<String>) {
     #[cfg(feature = "log")]
     let _ = self.pin_sender.send(pin);
   }
@@ -106,7 +106,7 @@ impl<R: Runtime> UiCallback for Webauthn<R> {
 
     block_in_place(|| {
       let receiver = self.pin_receiver.lock().unwrap();
-      receiver.recv().ok()
+      receiver.recv().ok().flatten()
     })
   }
 

@@ -27,7 +27,7 @@ pub(crate) async fn authenticate<R: Runtime>(
 }
 
 #[command]
-pub(crate) fn send_pin<R: Runtime>(app: AppHandle<R>, pin: String) {
+pub(crate) fn send_pin<R: Runtime>(app: AppHandle<R>, pin: Option<String>) {
   app.webauthn().send_pin(pin);
 }
 
