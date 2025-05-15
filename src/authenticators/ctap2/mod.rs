@@ -1,3 +1,4 @@
+use core::time;
 use std::{
   marker::PhantomData,
   sync::{mpsc::Sender, Mutex},
@@ -45,12 +46,13 @@ impl<R: Runtime> Authenticator<R> for Webauthn<R> {
     &self,
     origin: Url,
     options: PublicKeyCredentialCreationOptions,
+    timeout: u32,
   ) -> crate::Result<RegisterPublicKeyCredential> {
     #[cfg(feature = "log")]
     log::info!("Registering with options: {:?}", options);
     let mut manager = self.manager.lock().unwrap();
     manager
-      .perform_register(self.status_tx.clone(), origin, options, 100000)
+      .perform_register(self.status_tx.clone(), origin, options, timeout as u64)
       .map_err(|e| {
         #[cfg(feature = "log")]
         log::error!("Failed to register: {:?}", e);
@@ -62,12 +64,13 @@ impl<R: Runtime> Authenticator<R> for Webauthn<R> {
     &self,
     origin: Url,
     options: PublicKeyCredentialRequestOptions,
+    timeout: u32,
   ) -> crate::Result<PublicKeyCredential> {
     #[cfg(feature = "log")]
     log::debug!("Authenticating with options: {:?}", options);
     let mut manager = self.manager.lock().unwrap();
     manager
-      .perform_authentication(self.status_tx.clone(), origin, options, 100000)
+      .perform_authentication(self.status_tx.clone(), origin, options, timeout as u64)
       .map_err(|e| {
         #[cfg(feature = "log")]
         log::error!("Failed to authenticate: {:?}", e);

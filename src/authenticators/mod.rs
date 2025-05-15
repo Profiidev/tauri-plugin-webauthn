@@ -16,11 +16,13 @@ pub trait Authenticator<R: Runtime>: Sized {
     &self,
     origin: Url,
     options: PublicKeyCredentialCreationOptions,
+    timeout: u32,
   ) -> crate::Result<RegisterPublicKeyCredential>;
   fn authenticate(
     &self,
     origin: Url,
     options: PublicKeyCredentialRequestOptions,
+    timeout: u32,
   ) -> crate::Result<PublicKeyCredential>;
   fn send_pin(&self, pin: String) {
     #[cfg(feature = "log")]

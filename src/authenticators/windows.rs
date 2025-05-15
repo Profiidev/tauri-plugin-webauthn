@@ -27,9 +27,10 @@ impl<R: Runtime> Authenticator<R> for Webauthn<R> {
     &self,
     origin: Url,
     options: PublicKeyCredentialCreationOptions,
+    timeout: u32,
   ) -> crate::Result<RegisterPublicKeyCredential> {
     let mut auth = Win10::default();
-    auth.perform_register(origin, options, 1000).map_err(|e| {
+    auth.perform_register(origin, options, timeout).map_err(|e| {
       #[cfg(feature = "log")]
       log::error!("Failed to register: {:?}", e);
       crate::Error::WebAuthn(e)
@@ -40,9 +41,10 @@ impl<R: Runtime> Authenticator<R> for Webauthn<R> {
     &self,
     origin: Url,
     options: PublicKeyCredentialRequestOptions,
+    timeout: u32,
   ) -> crate::Result<PublicKeyCredential> {
     let mut auth = Win10::default();
-    auth.perform_auth(origin, options, 0).map_err(|e| {
+    auth.perform_auth(origin, options, timeout).map_err(|e| {
       #[cfg(feature = "log")]
       log::error!("Failed to authenticate: {:?}", e);
       crate::Error::WebAuthn(e)

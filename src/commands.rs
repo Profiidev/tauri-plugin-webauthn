@@ -10,13 +10,21 @@ use crate::authenticators::Authenticator;
 use crate::Result;
 use crate::WebauthnExt;
 
+const DEFAULT_TIMEOUT: u32 = 60_000;
+
 #[command]
 pub(crate) async fn register<R: Runtime>(
   app: AppHandle<R>,
   origin: Url,
   options: PublicKeyCredentialCreationOptions,
+  timeout: Option<u32>,
 ) -> Result<RegisterPublicKeyCredential> {
-  block_in_place(|| app.webauthn().register(origin, options).log())
+  block_in_place(|| {
+    app
+      .webauthn()
+      .register(origin, options, timeout.unwrap_or(DEFAULT_TIMEOUT))
+      .log()
+  })
 }
 
 #[command]
@@ -24,8 +32,14 @@ pub(crate) async fn authenticate<R: Runtime>(
   app: AppHandle<R>,
   origin: Url,
   options: PublicKeyCredentialRequestOptions,
+  timeout: Option<u32>,
 ) -> Result<PublicKeyCredential> {
-  block_in_place(|| app.webauthn().authenticate(origin, options).log())
+  block_in_place(|| {
+    app
+      .webauthn()
+      .authenticate(origin, options, timeout.unwrap_or(DEFAULT_TIMEOUT))
+      .log()
+  })
 }
 
 #[command]
