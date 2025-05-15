@@ -5,9 +5,9 @@ use webauthn_rs_proto::{
   RegisterPublicKeyCredential,
 };
 
-#[cfg(all(desktop, not(all(feature = "win_native", windows))))]
+#[cfg(all(desktop, target_os = "linux"))]
 pub mod ctap2;
-#[cfg(all(desktop, all(feature = "win_native", windows)))]
+#[cfg(all(desktop, windows))]
 pub mod windows;
 
 pub trait Authenticator<R: Runtime>: Sized {

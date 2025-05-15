@@ -9,7 +9,7 @@ pub enum Error {
   #[cfg(mobile)]
   #[error(transparent)]
   PluginInvoke(#[from] tauri::plugin::mobile::PluginInvokeError),
-  #[cfg(all(desktop, all(feature = "win_native", windows)))]
+  #[cfg(all(desktop, windows))]
   #[error("WebAuthn error: {0:?}")]
   WebAuthn(webauthn_authenticator_rs::error::WebauthnCError),
   #[error(transparent)]
@@ -18,10 +18,10 @@ pub enum Error {
   NoToken,
   #[error("Failed to create authenticator")]
   Authenticator,
-  #[cfg(all(desktop, not(all(feature = "win_native", windows))))]
+  #[cfg(all(desktop, target_os = "linux"))]
   #[error(transparent)]
   Ctap2(#[from] authenticator::errors::AuthenticatorError),
-  #[cfg(all(desktop, not(all(feature = "win_native", windows))))]
+  #[cfg(all(desktop, target_os = "linux"))]
   #[error(transparent)]
   Cbor2(#[from] serde_cbor_2::Error),
 }

@@ -10,9 +10,9 @@ mod error;
 
 pub use error::{Error, Result};
 
-#[cfg(all(desktop, not(all(feature = "win_native", windows))))]
+#[cfg(all(desktop, target_os = "linux"))]
 type Webauthn<R> = authenticators::ctap2::Webauthn<R>;
-#[cfg(all(desktop, all(feature = "win_native", windows)))]
+#[cfg(all(desktop, windows))]
 type Webauthn<R> = authenticators::windows::Webauthn<R>;
 
 /// Extensions to [`tauri::App`], [`tauri::AppHandle`] and [`tauri::Window`] to access the webauthn APIs.

@@ -33,35 +33,22 @@ tokio = { version = "1.45.0", features = ["sync"] }
 tauri-plugin = { version = "2.2.0", features = ["build"] }
 
 [features]
-default = ["log", "ctap2", "win_native"]
+default = ["log"]
 log = ["dep:log"]
 
-ctap2 = [
-  "dep:authenticator",
-  "dep:serde_cbor_2",
-  "dep:openssl",
-  "dep:base64urlsafedata",
-  "dep:base64",
-  "dep:futures",
-]
-
-# For windows you need either the ctap2 or the win_native feature
-# win_native takes precedence over ctap2
-win_native = ["dep:webauthn-authenticator-rs"]
-
-[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+[target.'cfg(target_os = "linux")'.dependencies]
 authenticator = { version = "0.4.1", default-features = false, features = [
   "crypto_openssl",
-], optional = true }
-serde_cbor_2 = { version = "0.12.0-dev", optional = true }
-openssl = { version = "0.10.72", optional = true }
-base64urlsafedata = { version = "0.5.1", optional = true }
-base64 = { version = "0.22.1", optional = true }
-futures = { version = "0.3.31", optional = true }
+] }
+serde_cbor_2 = "0.12.0-dev"
+openssl = "0.10.72"
+base64urlsafedata = "0.5.1"
+base64 = "0.22.1"
+futures = "0.3.31"
 
 [target.'cfg(windows)'.dependencies]
 webauthn-authenticator-rs = { version = "0.5.0", features = [
   "nfc",
   "usb",
   "win10",
-], optional = true }
+] }
