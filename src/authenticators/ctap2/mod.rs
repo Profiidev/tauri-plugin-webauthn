@@ -16,6 +16,7 @@ use webauthn_rs_proto::{
 use super::Authenticator;
 
 mod platform;
+mod event;
 
 pub const EVENT_NAME: &str = "tauri-plugin-webauthn";
 

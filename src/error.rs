@@ -18,10 +18,10 @@ pub enum Error {
   NoToken,
   #[error("Failed to create authenticator")]
   Authenticator,
-  #[cfg(desktop)]
+  #[cfg(all(desktop, not(all(feature = "win_native", windows))))]
   #[error(transparent)]
   Ctap2(#[from] authenticator::errors::AuthenticatorError),
-  #[cfg(desktop)]
+  #[cfg(all(desktop, not(all(feature = "win_native", windows))))]
   #[error(transparent)]
   Cbor2(#[from] serde_cbor_2::Error),
 }

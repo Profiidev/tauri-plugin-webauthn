@@ -4,22 +4,16 @@ use tauri::{
   Manager, Runtime,
 };
 
-pub use models::*;
-
-#[cfg(mobile)]
-mod mobile;
-
+mod authenticators;
 mod commands;
 mod error;
-mod models;
-mod authenticators;
 
 pub use error::{Error, Result};
 
-#[cfg(mobile)]
-use mobile::Webauthn;
-
+#[cfg(all(desktop, not(all(feature = "win_native", windows))))]
 type Webauthn<R> = authenticators::ctap2::Webauthn<R>;
+#[cfg(all(desktop, all(feature = "win_native", windows)))]
+type Webauthn<R> = authenticators::windows::Webauthn<R>;
 
 /// Extensions to [`tauri::App`], [`tauri::AppHandle`] and [`tauri::Window`] to access the webauthn APIs.
 pub trait WebauthnExt<R: Runtime> {
