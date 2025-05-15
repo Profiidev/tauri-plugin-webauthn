@@ -118,8 +118,10 @@
       bind:value={name}
     />
     <button onclick={reg}>Register</button>
-    <button onclick={auth}>Authenticate</button>
   </form>
+  <div class="row" style="margin-top: 1rem;">
+    <button onclick={auth}>Authenticate</button>
+  </div>
   <p>Status: {status}</p>
   <form class="row">
     <input
@@ -134,15 +136,16 @@
     <p>Click a key to select</p>
   {/if}
   {#each keys as key, i}
-    <button
-      class="row"
-      onclick={() => {
-        selectKey(i);
-        keys = [];
-      }}
-    >
-      {key}
-    </button>
+    <div class="row">
+      <button
+        onclick={() => {
+          selectKey(i);
+          keys = [];
+        }}
+      >
+        {key}
+      </button>
+    </div>
   {/each}
 </main>
 

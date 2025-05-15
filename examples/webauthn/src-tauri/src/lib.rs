@@ -118,10 +118,8 @@ pub fn run() {
       .build()
       .unwrap(),
     )
-    .manage(Mutex::new(
-      HashMap::<String, DiscoverableAuthentication>::new(),
-    ))
-    .manage(Mutex::new(HashMap::<String, PasskeyRegistration>::new()))
+    .manage(Mutex::new(Option::<DiscoverableAuthentication>::None))
+    .manage(Mutex::new(Option::<(PasskeyRegistration, Uuid)>::None))
     .manage(Mutex::new(HashMap::<Uuid, Vec<Passkey>>::new()))
     .manage(Mutex::new(HashMap::<String, Uuid>::new()))
     .plugin(
