@@ -46,6 +46,32 @@ Denies the authenticate command without any pre-configured scope.
 <tr>
 <td>
 
+`webauthn:allow-cancel`
+
+</td>
+<td>
+
+Enables the cancel command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`webauthn:deny-cancel`
+
+</td>
+<td>
+
+Denies the cancel command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `webauthn:allow-register`
 
 </td>
@@ -65,6 +91,32 @@ Enables the register command without any pre-configured scope.
 <td>
 
 Denies the register command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`webauthn:allow-select-key`
+
+</td>
+<td>
+
+Enables the select_key command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`webauthn:deny-select-key`
+
+</td>
+<td>
+
+Denies the select_key command without any pre-configured scope.
 
 </td>
 </tr>

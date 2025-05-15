@@ -1,4 +1,10 @@
-const COMMANDS: &[&str] = &["register", "authenticate", "send_pin"];
+const COMMANDS: &[&str] = &[
+  "register",
+  "authenticate",
+  "send_pin",
+  "select_key",
+  "cancel",
+];
 
 fn main() {
   tauri_plugin::Builder::new(COMMANDS)

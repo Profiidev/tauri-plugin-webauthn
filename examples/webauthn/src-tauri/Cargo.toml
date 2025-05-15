@@ -25,7 +25,7 @@ serde_json = "1"
 tauri-plugin-webauthn = { path = "../../../" }
 tauri-plugin-log = "2"
 webauthn-rs-proto = "0.5.1"
-webauthn-rs = "0.5.1"
+webauthn-rs = { version = "0.5.1", features = ["conditional-ui"] }
 tracing = { version = "0.1.41", features = ["log"] }
 openssl = { version = "0.10.72", features = ["vendored"] }
 chrono = "0.4.41"

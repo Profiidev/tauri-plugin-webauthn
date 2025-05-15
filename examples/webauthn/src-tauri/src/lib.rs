@@ -4,7 +4,7 @@ use chrono::Local;
 use tauri::{async_runtime::Mutex, State, Url};
 use tauri_plugin_log::{RotationStrategy, Target, TargetKind, TimezoneStrategy};
 use webauthn_rs::{
-  prelude::{Passkey, PasskeyAuthentication, PasskeyRegistration, Uuid},
+  prelude::{DiscoverableAuthentication, Passkey, PasskeyRegistration, Uuid},
   Webauthn, WebauthnBuilder,
 };
 use webauthn_rs_proto::{
@@ -14,35 +14,40 @@ use webauthn_rs_proto::{
 
 #[tauri::command]
 async fn reg_start(
-  state: State<'_, Mutex<HashMap<String, PasskeyRegistration>>>,
-  passkeys: State<'_, Mutex<HashMap<String, Passkey>>>,
+  state: State<'_, Mutex<Option<(PasskeyRegistration, Uuid)>>>,
+  passkeys: State<'_, Mutex<HashMap<Uuid, Vec<Passkey>>>>,
   webauthn: State<'_, Webauthn>,
+  users: State<'_, Mutex<HashMap<String, Uuid>>>,
   name: &str,
 ) -> Result<PublicKeyCredentialCreationOptions, ()> {
+  let mut users = users.lock().await;
+  let uuid = users.entry(name.to_string()).or_insert(Uuid::new_v4());
+
   let passkeys = passkeys.lock().await;
-  let passkey = passkeys.get(name).map(|p| vec![p.cred_id().clone()]);
+  let passkey = passkeys
+    .get(uuid)
+    .map(|p| p.iter().map(|p| p.cred_id().clone()).collect());
 
   let (challenge, state_val) = webauthn
-    .start_passkey_registration(Uuid::new_v4(), name, name, passkey)
+    .start_passkey_registration(*uuid, name, name, passkey)
     .expect("Failed to start registration");
 
   let mut state = state.lock().await;
-  state.insert(name.to_string(), state_val);
+  state.replace((state_val, *uuid));
 
   Ok(challenge.public_key)
 }
 
 #[tauri::command]
 async fn reg_finish(
-  state: State<'_, Mutex<HashMap<String, PasskeyRegistration>>>,
-  passkeys: State<'_, Mutex<HashMap<String, Passkey>>>,
+  state: State<'_, Mutex<Option<(PasskeyRegistration, Uuid)>>>,
+  passkeys: State<'_, Mutex<HashMap<Uuid, Vec<Passkey>>>>,
   webauthn: State<'_, Webauthn>,
-  name: &str,
   response: RegisterPublicKeyCredential,
 ) -> Result<(), ()> {
   let mut state = state.lock().await;
-  let passkey_reg = state
-    .remove(name)
+  let (passkey_reg, uuid) = state
+    .take()
     .expect("Failed to get passkey registration state");
 
   let passkey = webauthn
@@ -50,7 +55,8 @@ async fn reg_finish(
     .expect("Failed to finish registration");
 
   let mut passkeys = passkeys.lock().await;
-  passkeys.insert(name.to_string(), passkey.clone());
+  let passkeys = passkeys.entry(uuid).or_default();
+  passkeys.push(passkey);
 
   Ok(())
 }
@@ -58,19 +64,14 @@ async fn reg_finish(
 #[tauri::command]
 async fn auth_start(
   webauthn: State<'_, Webauthn>,
-  state: State<'_, Mutex<HashMap<String, PasskeyAuthentication>>>,
-  passkeys: State<'_, Mutex<HashMap<String, Passkey>>>,
-  name: &str,
+  state: State<'_, Mutex<Option<DiscoverableAuthentication>>>,
 ) -> Result<PublicKeyCredentialRequestOptions, ()> {
-  let passkeys = passkeys.lock().await;
-  let passkey = passkeys.get(name).expect("Failed to get passkey").clone();
-
   let (challenge, state_val) = webauthn
-    .start_passkey_authentication(&[passkey])
+    .start_discoverable_authentication()
     .expect("Failed to start authentication");
 
   let mut state = state.lock().await;
-  state.insert(name.to_string(), state_val);
+  state.replace(state_val);
 
   Ok(challenge.public_key)
 }
@@ -78,16 +79,26 @@ async fn auth_start(
 #[tauri::command]
 async fn auth_finish(
   webauthn: State<'_, Webauthn>,
-  state: State<'_, Mutex<HashMap<String, PasskeyAuthentication>>>,
-  name: &str,
+  state: State<'_, Mutex<Option<DiscoverableAuthentication>>>,
+  passkeys: State<'_, Mutex<HashMap<Uuid, Vec<Passkey>>>>,
   response: PublicKeyCredential,
 ) -> Result<(), ()> {
+  let (user, cred_id) = webauthn
+    .identify_discoverable_authentication(&response)
+    .expect("Failed to identify authentication");
+
+  let passkeys = passkeys.lock().await;
+  let passkey = passkeys
+    .get(&user)
+    .and_then(|p| p.iter().find(|p| p.cred_id() == cred_id))
+    .expect("Passkey not found");
+
   let mut state = state.lock().await;
   let passkey_auth = state
-    .remove(name)
+    .take()
     .expect("Failed to get passkey authentication state");
   webauthn
-    .finish_passkey_authentication(&response, &passkey_auth)
+    .finish_discoverable_authentication(&response, passkey_auth, &[passkey.into()])
     .expect("Failed to finish authentication");
   Ok(())
 }
@@ -107,9 +118,12 @@ pub fn run() {
       .build()
       .unwrap(),
     )
-    .manage(Mutex::new(HashMap::<String, PasskeyAuthentication>::new()))
+    .manage(Mutex::new(
+      HashMap::<String, DiscoverableAuthentication>::new(),
+    ))
     .manage(Mutex::new(HashMap::<String, PasskeyRegistration>::new()))
-    .manage(Mutex::new(HashMap::<String, Passkey>::new()))
+    .manage(Mutex::new(HashMap::<Uuid, Vec<Passkey>>::new()))
+    .manage(Mutex::new(HashMap::<String, Uuid>::new()))
     .plugin(
       tauri_plugin_log::Builder::new()
         .clear_targets()

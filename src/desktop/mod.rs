@@ -51,7 +51,7 @@ impl<R: Runtime> Webauthn<R> {
     log::info!("Registering with options: {:?}", options);
     let mut manager = self.manager.lock().unwrap();
     manager
-      .perform_register(self.status_tx.clone(), origin, options, 10000)
+      .perform_register(self.status_tx.clone(), origin, options, 100000)
       .map_err(|e| {
         #[cfg(feature = "log")]
         log::error!("Failed to register: {:?}", e);
@@ -68,7 +68,7 @@ impl<R: Runtime> Webauthn<R> {
     log::debug!("Authenticating with options: {:?}", options);
     let mut manager = self.manager.lock().unwrap();
     manager
-      .perform_authentication(self.status_tx.clone(), origin, options, 10000)
+      .perform_authentication(self.status_tx.clone(), origin, options, 100000)
       .map_err(|e| {
         #[cfg(feature = "log")]
         log::error!("Failed to authenticate: {:?}", e);
