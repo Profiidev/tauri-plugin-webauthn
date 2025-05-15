@@ -9,7 +9,7 @@ pub enum Error {
   #[cfg(mobile)]
   #[error(transparent)]
   PluginInvoke(#[from] tauri::plugin::mobile::PluginInvokeError),
-  #[cfg(desktop)]
+  #[cfg(all(desktop, all(feature = "win_native", windows)))]
   #[error("WebAuthn error: {0:?}")]
   WebAuthn(webauthn_authenticator_rs::error::WebauthnCError),
   #[error(transparent)]

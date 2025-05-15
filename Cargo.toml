@@ -33,10 +33,9 @@ tokio = { version = "1.45.0", features = ["sync"] }
 tauri-plugin = { version = "2.2.0", features = ["build"] }
 
 [features]
-default = ["log", "win_native"]
+default = ["log", "ctap2", "win_native"]
 log = ["dep:log"]
 
-win_native = ["dep:webauthn-authenticator-rs"]
 ctap2 = [
   "dep:authenticator",
   "dep:serde_cbor_2",
@@ -45,6 +44,10 @@ ctap2 = [
   "dep:base64",
   "dep:futures",
 ]
+
+# For windows you need either the ctap2 or the win_native feature
+# win_native takes precedence over ctap2
+win_native = ["dep:webauthn-authenticator-rs"]
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 authenticator = { version = "0.4.1", default-features = false, features = [

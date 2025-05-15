@@ -27,7 +27,7 @@ use webauthn_rs_proto::{
   RequestAuthenticationExtensions, RequestRegistrationExtensions,
 };
 
-use crate::models::WebauthnEvent;
+use crate::authenticators::ctap2::event::WebauthnEvent;
 
 use super::EVENT_NAME;
 
