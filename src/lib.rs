@@ -39,6 +39,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
       commands::register,
       commands::authenticate,
       commands::send_pin,
+      commands::select_key,
     ])
     .setup(|app, api| {
       #[cfg(mobile)]

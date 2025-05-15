@@ -12,13 +12,18 @@ pub enum Error {
   #[cfg(desktop)]
   #[error("WebAuthn error: {0:?}")]
   WebAuthn(webauthn_authenticator_rs::error::WebauthnCError),
-  #[cfg(mobile)]
   #[error(transparent)]
   SerdeJson(#[from] serde_json::Error),
   #[error("No token found")]
   NoToken,
   #[error("Failed to create authenticator")]
   Authenticator,
+  #[cfg(desktop)]
+  #[error(transparent)]
+  Ctap2(#[from] authenticator::errors::AuthenticatorError),
+  #[cfg(desktop)]
+  #[error(transparent)]
+  Cbor2(#[from] serde_cbor_2::Error),
 }
 
 impl Serialize for Error {

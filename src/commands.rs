@@ -9,26 +9,31 @@ use crate::Result;
 use crate::WebauthnExt;
 
 #[command]
-pub(crate) async fn register<R: Runtime>(
+pub(crate) fn register<R: Runtime>(
   app: AppHandle<R>,
   origin: Url,
   options: PublicKeyCredentialCreationOptions,
 ) -> Result<RegisterPublicKeyCredential> {
-  app.webauthn().register(origin, options).await.log()
+  app.webauthn().register(origin, options).log()
 }
 
 #[command]
-pub(crate) async fn authenticate<R: Runtime>(
+pub(crate) fn authenticate<R: Runtime>(
   app: AppHandle<R>,
   origin: Url,
   options: PublicKeyCredentialRequestOptions,
 ) -> Result<PublicKeyCredential> {
-  app.webauthn().authenticate(origin, options).await.log()
+  app.webauthn().authenticate(origin, options).log()
 }
 
 #[command]
-pub(crate) fn send_pin<R: Runtime>(app: AppHandle<R>, pin: Option<String>) {
+pub(crate) fn send_pin<R: Runtime>(app: AppHandle<R>, pin: String) {
   app.webauthn().send_pin(pin);
+}
+
+#[command]
+pub(crate) fn select_key<R: Runtime>(app: AppHandle<R>, key: usize) {
+  app.webauthn().select_key(key);
 }
 
 trait ResultExt<T> {

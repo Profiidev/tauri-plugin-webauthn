@@ -27,7 +27,7 @@ pub fn init<R: Runtime, C: DeserializeOwned>(
 pub struct Webauthn<R: Runtime>(PluginHandle<R>);
 
 impl<R: Runtime> Webauthn<R> {
-  pub async fn register(
+  pub fn register(
     &self,
     _: Url,
     mut options: PublicKeyCredentialCreationOptions,
@@ -42,7 +42,7 @@ impl<R: Runtime> Webauthn<R> {
       .map_err(Into::into)
   }
 
-  pub async fn authenticate(
+  pub fn authenticate(
     &self,
     _: Url,
     options: PublicKeyCredentialRequestOptions,
