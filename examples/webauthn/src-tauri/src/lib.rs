@@ -1,4 +1,4 @@
-use std::{collections::HashMap, vec};
+use std::{collections::HashMap, fmt::Debug, vec};
 
 use chrono::Local;
 use tauri::{async_runtime::Mutex, State, Url};
@@ -30,7 +30,7 @@ async fn reg_start(
 
   let (challenge, state_val) = webauthn
     .start_passkey_registration(*uuid, name, name, passkey)
-    .expect("Failed to start registration");
+    .panic_log("Failed to start registration");
 
   let mut state = state.lock().await;
   state.replace((state_val, *uuid));
@@ -48,11 +48,11 @@ async fn reg_finish(
   let mut state = state.lock().await;
   let (passkey_reg, uuid) = state
     .take()
-    .expect("Failed to get passkey registration state");
+    .panic_log("Failed to get passkey registration state");
 
   let passkey = webauthn
     .finish_passkey_registration(&response, &passkey_reg)
-    .expect("Failed to finish registration");
+    .panic_log("Failed to finish registration");
 
   let mut passkeys = passkeys.lock().await;
   let passkeys = passkeys.entry(uuid).or_default();
@@ -68,7 +68,7 @@ async fn auth_start(
 ) -> Result<PublicKeyCredentialRequestOptions, ()> {
   let (challenge, state_val) = webauthn
     .start_discoverable_authentication()
-    .expect("Failed to start authentication");
+    .panic_log("Failed to start authentication");
 
   let mut state = state.lock().await;
   state.replace(state_val);
@@ -85,21 +85,21 @@ async fn auth_finish(
 ) -> Result<(), ()> {
   let (user, cred_id) = webauthn
     .identify_discoverable_authentication(&response)
-    .expect("Failed to identify authentication");
+    .panic_log("Failed to identify authentication");
 
   let passkeys = passkeys.lock().await;
   let passkey = passkeys
     .get(&user)
     .and_then(|p| p.iter().find(|p| p.cred_id() == cred_id))
-    .expect("Passkey not found");
+    .panic_log("Passkey not found");
 
   let mut state = state.lock().await;
   let passkey_auth = state
     .take()
-    .expect("Failed to get passkey authentication state");
+    .panic_log("Failed to get passkey authentication state");
   webauthn
     .finish_discoverable_authentication(&response, passkey_auth, &[passkey.into()])
-    .expect("Failed to finish authentication");
+    .panic_log("Failed to finish authentication");
   Ok(())
 }
 
@@ -143,4 +143,26 @@ pub fn run() {
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
+}
+
+trait PanicLog<T> {
+  fn panic_log(self, msg: &str) -> T;
+}
+
+impl<T, E: Debug> PanicLog<T> for Result<T, E> {
+  fn panic_log(self, msg: &str) -> T {
+    if let Err(e) = &self {
+      log::error!("{}: {:?}", msg, e);
+    }
+    self.unwrap()
+  }
+}
+
+impl<T> PanicLog<T> for Option<T> {
+  fn panic_log(self, msg: &str) -> T {
+    if self.is_none() {
+      log::error!("{}", msg);
+    }
+    self.unwrap()
+  }
 }

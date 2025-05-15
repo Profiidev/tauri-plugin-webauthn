@@ -29,3 +29,4 @@ webauthn-rs = { version = "0.5.1", features = ["conditional-ui"] }
 tracing = { version = "0.1.41", features = ["log"] }
 openssl = { version = "0.10.72", features = ["vendored"] }
 chrono = "0.4.41"
+log = "0.4.27"
