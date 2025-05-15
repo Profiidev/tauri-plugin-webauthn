@@ -13,7 +13,9 @@ pub struct FingerprintEnrollmentFeedback {
 pub enum WebauthnEvent {
   SelectDevice,
   PresenceRequired,
-  PinError(PinError),
+  PinEvent {
+    event: PinEvent,
+  },
   SelectKey {
     keys: Vec<PublicKeyCredentialUserEntity>,
   },
@@ -21,7 +23,7 @@ pub enum WebauthnEvent {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
-pub enum PinError {
+pub enum PinEvent {
   PinRequired,
   InvalidPin { attempts_remaining: Option<u8> },
   PinAuthBlocked,
@@ -35,26 +37,28 @@ impl From<StatusUpdate> for WebauthnEvent {
     match status {
       StatusUpdate::SelectDeviceNotice => WebauthnEvent::SelectDevice,
       StatusUpdate::PresenceRequired => WebauthnEvent::PresenceRequired,
-      StatusUpdate::PinUvError(pin_error) => WebauthnEvent::PinError(pin_error.into()),
+      StatusUpdate::PinUvError(event) => WebauthnEvent::PinEvent {
+        event: event.into(),
+      },
       StatusUpdate::SelectResultNotice(.., users) => WebauthnEvent::SelectKey { keys: users },
       _ => unreachable!(),
     }
   }
 }
 
-impl From<StatusPinUv> for PinError {
+impl From<StatusPinUv> for PinEvent {
   fn from(status: StatusPinUv) -> Self {
     match status {
-      StatusPinUv::PinRequired(..) => PinError::PinRequired,
-      StatusPinUv::InvalidPin(.., attempts) => PinError::InvalidPin {
+      StatusPinUv::PinRequired(..) => PinEvent::PinRequired,
+      StatusPinUv::InvalidPin(.., attempts) => PinEvent::InvalidPin {
         attempts_remaining: attempts,
       },
-      StatusPinUv::PinAuthBlocked => PinError::PinAuthBlocked,
-      StatusPinUv::PinBlocked => PinError::PinBlocked,
-      StatusPinUv::InvalidUv(attempts) => PinError::InvalidUv {
+      StatusPinUv::PinAuthBlocked => PinEvent::PinAuthBlocked,
+      StatusPinUv::PinBlocked => PinEvent::PinBlocked,
+      StatusPinUv::InvalidUv(attempts) => PinEvent::InvalidUv {
         attempts_remaining: attempts,
       },
-      StatusPinUv::UvBlocked => PinError::UvBlocked,
+      StatusPinUv::UvBlocked => PinEvent::UvBlocked,
       _ => unreachable!(),
     }
   }

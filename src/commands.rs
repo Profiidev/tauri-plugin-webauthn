@@ -36,6 +36,11 @@ pub(crate) fn select_key<R: Runtime>(app: AppHandle<R>, key: usize) {
   app.webauthn().select_key(key);
 }
 
+#[command]
+pub(crate) fn cancel<R: Runtime>(app: AppHandle<R>) {
+  app.webauthn().cancel();
+}
+
 trait ResultExt<T> {
   fn log(self) -> Self;
 }

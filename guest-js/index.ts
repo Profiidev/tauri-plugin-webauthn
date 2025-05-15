@@ -11,41 +11,51 @@ export * as types from '@simplewebauthn/types';
 
 export type WebauthnEvent =
   | {
-      type:
-        | WebauthnEventType.Processing
-        | WebauthnEventType.RequestTouch
-        | WebauthnEventType.RequestPin;
+      type: WebauthnEventType.SelectDevice | WebauthnEventType.PresenceRequired;
     }
   | {
-      type: WebauthnEventType.FingerprintEnrollmentFeedback;
-      remainingSamples: number;
-      feedback?: WebauthnFingerprintEnrollmentFeedback;
+      type: WebauthnEventType.PinEvent;
+      event: PinEvent;
+    }
+  | {
+      type: WebauthnEventType.SelectKey;
+      keys: AuthKey[];
     };
 
 export enum WebauthnEventType {
-  Processing = 'processing',
-  RequestTouch = 'requestTouch',
-  RequestPin = 'requestPin',
-  FingerprintEnrollmentFeedback = 'fingerprintEnrollmentFeedback'
+  SelectDevice = 'selectDevice',
+  PresenceRequired = 'presenceRequired',
+  PinEvent = 'pinEvent',
+  SelectKey = 'selectKey'
 }
 
-export enum WebauthnFingerprintEnrollmentFeedback {
-  Good = 0x00,
-  TooHigh = 0x01,
-  TooLow = 0x02,
-  TooLeft = 0x03,
-  TooRight = 0x04,
-  TooFast = 0x05,
-  TooSlow = 0x06,
-  PoorQuality = 0x07,
-  TooSkewed = 0x08,
-  TooShort = 0x09,
-  MergeFailure = 0x0a,
-  AlreadyExists = 0x0b,
-  // 0x0c unused
-  NoUserActivity = 0x0d,
-  NoUserPresenceTransition = 0x0e
+export type PinEvent =
+  | {
+      type:
+        | PinEventType.PinRequired
+        | PinEventType.PinAuthBlocked
+        | PinEventType.PinBlocked
+        | PinEventType.UvBlocked;
+    }
+  | {
+      type: PinEventType.InvalidPin | PinEventType.InvalidUv;
+      attempts_remaining?: number;
+    };
+
+export enum PinEventType {
+  PinRequired = 'pinRequired',
+  InvalidPin = 'invalidPin',
+  PinAuthBlocked = 'pinAuthBlocked',
+  PinBlocked = 'pinBlocked',
+  InvalidUv = 'invalidUv',
+  UvBlocked = 'uvBlocked'
 }
+
+export type AuthKey = {
+  id: string;
+  name?: string;
+  displayName?: string;
+};
 
 export const EVENT_NAME = 'tauri-plugin-webauthn';
 
@@ -75,8 +85,14 @@ export async function sendPin(pin: string): Promise<void> {
   });
 }
 
-export async function cancelPin(): Promise<void> {
-  return await invoke('plugin:webauthn|send_pin');
+export async function selectKey(index: number): Promise<void> {
+  return await invoke('plugin:webauthn|select_key', {
+    key: index
+  });
+}
+
+export async function cancel(): Promise<void> {
+  return await invoke('plugin:webauthn|cancel');
 }
 
 export async function registerListener(

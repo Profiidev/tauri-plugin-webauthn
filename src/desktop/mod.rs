@@ -91,6 +91,10 @@ impl<R: Runtime> Webauthn<R> {
       let _ = sender.send(Some(key));
     }
   }
+
+  pub fn cancel(&self) {
+    let _ = self.manager.lock().unwrap().cancel();
+  }
 }
 
 #[cfg(windows)]
