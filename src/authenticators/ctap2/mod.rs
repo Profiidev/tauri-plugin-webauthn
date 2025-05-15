@@ -4,7 +4,7 @@ use std::{
 };
 
 use authenticator::{authenticatorservice::AuthenticatorService, Pin, StatusUpdate};
-use ctap2::AuthenticatorExt;
+use platform::AuthenticatorExt;
 use serde::de::DeserializeOwned;
 use tauri::{plugin::PluginApi, AppHandle, Runtime, Url};
 use tokio::sync::mpsc;
@@ -13,26 +13,12 @@ use webauthn_rs_proto::{
   RegisterPublicKeyCredential,
 };
 
-mod ctap2;
+use super::Authenticator;
+
+mod platform;
 
 pub const EVENT_NAME: &str = "tauri-plugin-webauthn";
 
-pub fn init<R: Runtime, C: DeserializeOwned>(
-  app: &AppHandle<R>,
-  _api: PluginApi<R, C>,
-) -> crate::Result<Webauthn<R>> {
-  let (pin_sender, pin_receiver) = mpsc::channel(100000);
-  let (select_sender, select_receiver) = mpsc::channel(100000);
-  Ok(Webauthn {
-    manager: Mutex::new(ctap2::init_manager()?),
-    status_tx: ctap2::status(app.clone(), pin_sender, select_sender),
-    pin_receiver: Mutex::new(pin_receiver),
-    select_receiver: Mutex::new(select_receiver),
-    phantom: PhantomData,
-  })
-}
-
-/// Access to the webauthn APIs.
 pub struct Webauthn<R: Runtime> {
   manager: Mutex<AuthenticatorService>,
   status_tx: Sender<StatusUpdate>,
@@ -41,8 +27,20 @@ pub struct Webauthn<R: Runtime> {
   phantom: PhantomData<AppHandle<R>>,
 }
 
-impl<R: Runtime> Webauthn<R> {
-  pub fn register(
+impl<R: Runtime> Authenticator<R> for Webauthn<R> {
+  fn init<C: DeserializeOwned>(app: &AppHandle<R>, _api: PluginApi<R, C>) -> crate::Result<Self> {
+    let (pin_sender, pin_receiver) = mpsc::channel(100000);
+    let (select_sender, select_receiver) = mpsc::channel(100000);
+    Ok(Webauthn {
+      manager: Mutex::new(platform::init_manager()?),
+      status_tx: platform::status(app.clone(), pin_sender, select_sender),
+      pin_receiver: Mutex::new(pin_receiver),
+      select_receiver: Mutex::new(select_receiver),
+      phantom: PhantomData,
+    })
+  }
+
+  fn register(
     &self,
     origin: Url,
     options: PublicKeyCredentialCreationOptions,
@@ -59,7 +57,7 @@ impl<R: Runtime> Webauthn<R> {
       })
   }
 
-  pub fn authenticate(
+  fn authenticate(
     &self,
     origin: Url,
     options: PublicKeyCredentialRequestOptions,
@@ -76,7 +74,7 @@ impl<R: Runtime> Webauthn<R> {
       })
   }
 
-  pub fn send_pin(&self, pin: String) {
+  fn send_pin(&self, pin: String) {
     #[cfg(feature = "log")]
     log::debug!("Sending pin");
     let mut last_sender = None;
@@ -88,7 +86,7 @@ impl<R: Runtime> Webauthn<R> {
     }
   }
 
-  pub fn select_key(&self, key: usize) {
+  fn select_key(&self, key: usize) {
     #[cfg(feature = "log")]
     log::debug!("Selecting key {}", key);
     let mut last_sender = None;
@@ -100,16 +98,9 @@ impl<R: Runtime> Webauthn<R> {
     }
   }
 
-  pub fn cancel(&self) {
+  fn cancel(&self) {
     #[cfg(feature = "log")]
     log::debug!("Cancelling operation");
     let _ = self.manager.lock().unwrap().cancel();
   }
-}
-
-#[cfg(windows)]
-async fn select_transport<U: UiCallback>(
-  _ui: &'_ U,
-) -> crate::Result<impl AuthenticatorBackend + '_> {
-  Ok(webauthn_authenticator_rs::win10::Win10::default())
 }

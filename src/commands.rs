@@ -6,6 +6,7 @@ use webauthn_rs_proto::{
   RegisterPublicKeyCredential,
 };
 
+use crate::authenticators::Authenticator;
 use crate::Result;
 use crate::WebauthnExt;
 
