@@ -1,4 +1,7 @@
-use std::sync::mpsc::{channel, Sender};
+use std::{
+  sync::mpsc::{channel, Sender},
+  thread,
+};
 
 use authenticator::{
   authenticatorservice::{AuthenticatorService, RegisterArgs, SignArgs},
@@ -15,7 +18,7 @@ use authenticator::{
 use base64::{prelude::BASE64_URL_SAFE_NO_PAD, Engine};
 use base64urlsafedata::Base64UrlSafeData;
 use openssl::sha::Sha256;
-use tauri::{AppHandle, Emitter, Runtime, Url};
+use tauri::{async_runtime::block_on, AppHandle, Emitter, Runtime, Url};
 use tokio::sync::mpsc;
 use webauthn_rs_proto::{
   AuthenticatorTransport, CollectedClientData, PublicKeyCredential,
@@ -194,29 +197,31 @@ pub fn status<R: Runtime>(
   select_sender: mpsc::Sender<Sender<Option<usize>>>,
 ) -> Sender<StatusUpdate> {
   let (status_tx, status_rx) = channel::<StatusUpdate>();
-  tokio::spawn(async move {
-    loop {
-      let Ok(status) = status_rx.recv() else {
-        return;
-      };
+  thread::spawn(move || loop {
+    let Ok(status) = status_rx.recv() else {
+      return;
+    };
 
-      #[cfg(feature = "log")]
-      log::debug!("Status: {:?}", status);
+    #[cfg(feature = "log")]
+    log::debug!("Status: {:?}", status);
 
-      match &status {
-        StatusUpdate::PinUvError(StatusPinUv::PinRequired(sender))
-        | StatusUpdate::PinUvError(StatusPinUv::InvalidPin(sender, ..)) => {
+    match &status {
+      StatusUpdate::PinUvError(StatusPinUv::PinRequired(sender))
+      | StatusUpdate::PinUvError(StatusPinUv::InvalidPin(sender, ..)) => {
+        block_on(async {
           let _ = pin_sender.send(sender.clone()).await;
-        }
-        StatusUpdate::SelectResultNotice(sender, ..) => {
-          let _ = select_sender.send(sender.clone()).await;
-        }
-        _ => (),
+        });
       }
-
-      let event: WebauthnEvent = status.into();
-      let _ = app_handle.emit(EVENT_NAME, event);
+      StatusUpdate::SelectResultNotice(sender, ..) => {
+        block_on(async {
+          let _ = select_sender.send(sender.clone()).await;
+        });
+      }
+      _ => (),
     }
+
+    let event: WebauthnEvent = status.into();
+    let _ = app_handle.emit(EVENT_NAME, event);
   });
   status_tx
 }

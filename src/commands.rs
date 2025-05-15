@@ -1,5 +1,6 @@
 use tauri::Url;
 use tauri::{command, AppHandle, Runtime};
+use tokio::task::block_in_place;
 use webauthn_rs_proto::{
   PublicKeyCredential, PublicKeyCredentialCreationOptions, PublicKeyCredentialRequestOptions,
   RegisterPublicKeyCredential,
@@ -9,35 +10,35 @@ use crate::Result;
 use crate::WebauthnExt;
 
 #[command]
-pub(crate) fn register<R: Runtime>(
+pub(crate) async fn register<R: Runtime>(
   app: AppHandle<R>,
   origin: Url,
   options: PublicKeyCredentialCreationOptions,
 ) -> Result<RegisterPublicKeyCredential> {
-  app.webauthn().register(origin, options).log()
+  block_in_place(|| app.webauthn().register(origin, options).log())
 }
 
 #[command]
-pub(crate) fn authenticate<R: Runtime>(
+pub(crate) async fn authenticate<R: Runtime>(
   app: AppHandle<R>,
   origin: Url,
   options: PublicKeyCredentialRequestOptions,
 ) -> Result<PublicKeyCredential> {
-  app.webauthn().authenticate(origin, options).log()
+  block_in_place(|| app.webauthn().authenticate(origin, options).log())
 }
 
 #[command]
-pub(crate) fn send_pin<R: Runtime>(app: AppHandle<R>, pin: String) {
+pub(crate) async fn send_pin<R: Runtime>(app: AppHandle<R>, pin: String) {
   app.webauthn().send_pin(pin);
 }
 
 #[command]
-pub(crate) fn select_key<R: Runtime>(app: AppHandle<R>, key: usize) {
+pub(crate) async fn select_key<R: Runtime>(app: AppHandle<R>, key: usize) {
   app.webauthn().select_key(key);
 }
 
 #[command]
-pub(crate) fn cancel<R: Runtime>(app: AppHandle<R>) {
+pub(crate) async fn cancel<R: Runtime>(app: AppHandle<R>) {
   app.webauthn().cancel();
 }
 

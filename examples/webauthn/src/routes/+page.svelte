@@ -10,12 +10,15 @@
     authenticate,
     registerListener,
     WebauthnEventType,
-    sendPin
+    sendPin,
+    PinEventType,
+    selectKey
   } from 'tauri-plugin-webauthn-api';
 
   let name = $state('');
   let pin = $state('');
   let status = $state('No status yet');
+  let keys = $state<string[]>([]);
 
   const reg = async () => {
     status = 'Requesting registration information...';
@@ -64,17 +67,43 @@
   onMount(() => {
     registerListener((event) => {
       switch (event.type) {
-        case WebauthnEventType.Processing:
-          status = 'Processing...';
+        case WebauthnEventType.SelectDevice:
+          status = 'Select device by touching it';
           break;
-        case WebauthnEventType.RequestTouch:
-          status = 'Please touch the device...';
+        case WebauthnEventType.PresenceRequired:
+          status = 'Touch the device to confirm presence';
           break;
-        case WebauthnEventType.RequestPin:
-          status = 'Please enter the PIN...';
+        case WebauthnEventType.PinEvent:
+          switch (event.event.type) {
+            case PinEventType.PinRequired:
+              status = 'Enter the PIN';
+              break;
+            case PinEventType.InvalidPin:
+              status =
+                'Invalid PIN, try again' + event.event.attempts_remaining
+                  ? ` (${event.event.attempts_remaining} attempts remaining)`
+                  : '';
+              break;
+            case PinEventType.PinAuthBlocked:
+              status = 'PIN authentication blocked';
+              break;
+            case PinEventType.PinBlocked:
+              status = 'PIN blocked';
+              break;
+            case PinEventType.InvalidUv:
+              status =
+                'Invalid UV' + event.event.attempts_remaining
+                  ? ` (${event.event.attempts_remaining} attempts remaining)`
+                  : '';
+              break;
+            case PinEventType.UvBlocked:
+              status = 'UV blocked';
+              break;
+          }
           break;
-        case WebauthnEventType.FingerprintEnrollmentFeedback:
-          status = `Fingerprint enrollment remaining: ${event.remainingSamples}, feedback: ${event.feedback}`;
+        case WebauthnEventType.SelectKey:
+          keys = event.keys.map((key) => key.name ?? key.displayName ?? key.id);
+          status = 'Select a key to authenticate';
           break;
       }
     });
@@ -101,6 +130,20 @@
     />
     <button onclick={pinSend}>Send</button>
   </form>
+  {#if keys.length > 0}
+    <p>Click a key to select</p>
+  {/if}
+  {#each keys as key, i}
+    <button
+      class="row"
+      onclick={() => {
+        selectKey(i);
+        keys = [];
+      }}
+    >
+      {key}
+    </button>
+  {/each}
 </main>
 
 <style>
