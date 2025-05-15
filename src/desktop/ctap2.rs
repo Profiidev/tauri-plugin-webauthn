@@ -97,8 +97,14 @@ impl AuthenticatorExt for AuthenticatorService {
     let (register_tx, register_rx) = channel();
     let callback = StateCallback::new(Box::new(move |rv| register_tx.send(rv).unwrap()));
 
+    #[cfg(feature = "log")]
+    log::debug!("Registering with args: {:?}", args);
+
     self.register(timeout, args, status_tx, callback)?;
     let result = register_rx.recv().unwrap()?;
+
+    #[cfg(feature = "log")]
+    log::debug!("Register result: {:?}", result);
 
     Ok(webauthn_rs_proto::RegisterPublicKeyCredential {
       extensions: convert_response_registration_extensions(result.extensions),
@@ -155,8 +161,14 @@ impl AuthenticatorExt for AuthenticatorService {
       sign_tx.send(rv).unwrap();
     }));
 
+    #[cfg(feature = "log")]
+    log::debug!("Signing with args: {:?}", args);
+
     self.sign(timeout, args, status_tx, callback)?;
     let result = sign_rx.recv().unwrap()?;
+
+    #[cfg(feature = "log")]
+    log::debug!("Sign result: {:?}", result);
 
     let raw_id = result.assertion.credentials.unwrap().id;
     let data = serde_cbor_2::to_vec(&result.assertion.auth_data)?;
@@ -187,6 +199,9 @@ pub fn status<R: Runtime>(
       let Ok(status) = status_rx.recv() else {
         return;
       };
+
+      #[cfg(feature = "log")]
+      log::debug!("Status: {:?}", status);
 
       match &status {
         StatusUpdate::PinUvError(StatusPinUv::PinRequired(sender))

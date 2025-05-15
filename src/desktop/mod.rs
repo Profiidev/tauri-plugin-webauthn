@@ -47,6 +47,8 @@ impl<R: Runtime> Webauthn<R> {
     origin: Url,
     options: PublicKeyCredentialCreationOptions,
   ) -> crate::Result<RegisterPublicKeyCredential> {
+    #[cfg(feature = "log")]
+    log::info!("Registering with options: {:?}", options);
     let mut manager = self.manager.lock().unwrap();
     manager
       .perform_register(self.status_tx.clone(), origin, options, 10000)
@@ -62,6 +64,8 @@ impl<R: Runtime> Webauthn<R> {
     origin: Url,
     options: PublicKeyCredentialRequestOptions,
   ) -> crate::Result<PublicKeyCredential> {
+    #[cfg(feature = "log")]
+    log::debug!("Authenticating with options: {:?}", options);
     let mut manager = self.manager.lock().unwrap();
     manager
       .perform_authentication(self.status_tx.clone(), origin, options, 10000)
@@ -73,6 +77,8 @@ impl<R: Runtime> Webauthn<R> {
   }
 
   pub fn send_pin(&self, pin: String) {
+    #[cfg(feature = "log")]
+    log::debug!("Sending pin");
     let mut last_sender = None;
     while let Ok(sender) = self.pin_receiver.lock().unwrap().try_recv() {
       last_sender = Some(sender);
@@ -83,6 +89,8 @@ impl<R: Runtime> Webauthn<R> {
   }
 
   pub fn select_key(&self, key: usize) {
+    #[cfg(feature = "log")]
+    log::debug!("Selecting key {}", key);
     let mut last_sender = None;
     while let Ok(sender) = self.select_receiver.lock().unwrap().try_recv() {
       last_sender = Some(sender);
@@ -93,6 +101,8 @@ impl<R: Runtime> Webauthn<R> {
   }
 
   pub fn cancel(&self) {
+    #[cfg(feature = "log")]
+    log::debug!("Cancelling operation");
     let _ = self.manager.lock().unwrap().cancel();
   }
 }
