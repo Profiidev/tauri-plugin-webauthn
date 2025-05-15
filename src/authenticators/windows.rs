@@ -30,11 +30,13 @@ impl<R: Runtime> Authenticator<R> for Webauthn<R> {
     timeout: u32,
   ) -> crate::Result<RegisterPublicKeyCredential> {
     let mut auth = Win10::default();
-    auth.perform_register(origin, options, timeout).map_err(|e| {
-      #[cfg(feature = "log")]
-      log::error!("Failed to register: {:?}", e);
-      crate::Error::WebAuthn(e)
-    })
+    auth
+      .perform_register(origin, options, timeout)
+      .map_err(|e| {
+        #[cfg(feature = "log")]
+        log::error!("Failed to register: {:?}", e);
+        crate::Error::WebAuthn(e)
+      })
   }
 
   fn authenticate(
