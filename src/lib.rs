@@ -14,6 +14,8 @@ pub use error::{Error, Result};
 type Webauthn<R> = authenticators::ctap2::Webauthn<R>;
 #[cfg(all(desktop, windows))]
 type Webauthn<R> = authenticators::windows::Webauthn<R>;
+#[cfg(mobile)]
+type Webauthn<R> = authenticators::mobile::Webauthn<R>;
 
 /// Extensions to [`tauri::App`], [`tauri::AppHandle`] and [`tauri::Window`] to access the webauthn APIs.
 pub trait WebauthnExt<R: Runtime> {
@@ -37,9 +39,6 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
       commands::cancel,
     ])
     .setup(|app, api| {
-      #[cfg(mobile)]
-      let webauthn = mobile::init(app, api)?;
-      #[cfg(desktop)]
       let webauthn = Webauthn::init(app, api)?;
       app.manage(webauthn);
       Ok(())
