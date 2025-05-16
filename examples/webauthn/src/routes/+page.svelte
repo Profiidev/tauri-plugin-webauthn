@@ -146,9 +146,7 @@
       placeholder="Enter a username..."
       bind:value={authName}
     />
-    <button onclick={auth_non_discoverable}
-      >Authenticate (no discovery)</button
-    >
+    <button onclick={auth_non_discoverable}>Authenticate (no discovery)</button>
   </form>
   <p>Status: {status}</p>
   <form class="row">
