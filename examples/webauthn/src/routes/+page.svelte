@@ -16,6 +16,7 @@
   } from 'tauri-plugin-webauthn-api';
 
   let name = $state('');
+  let authName = $state('');
   let pin = $state('');
   let status = $state('No status yet');
   let keys = $state<string[]>([]);
@@ -34,16 +35,33 @@
     );
 
     status = 'Registration response received, now calling verification...';
-    await invoke('reg_finish', { name, response });
+    await invoke('reg_finish', { response });
 
     status = 'Registration successful!';
   };
 
   const auth = async () => {
     status = 'Requesting authentication information...';
+    let options: PublicKeyCredentialRequestOptionsJSON =
+      await invoke('auth_start');
+
+    status = 'Authentication options received, now calling authenticate()...';
+    let response = await authenticate(
+      'https://tauri-plugin-webauthn-example.glitch.me/',
+      options
+    );
+
+    status = 'Authentication response received, now calling verification...';
+    await invoke('auth_finish', { response });
+
+    status = 'Authentication successful!';
+  };
+
+  const auth_non_discoverable = async () => {
+    status = 'Requesting authentication information...';
     let options: PublicKeyCredentialRequestOptionsJSON = await invoke(
-      'auth_start',
-      { name }
+      'auth_start_non_discoverable',
+      { name: authName }
     );
 
     status = 'Authentication options received, now calling authenticate()...';
@@ -53,7 +71,7 @@
     );
 
     status = 'Authentication response received, now calling verification...';
-    await invoke('auth_finish', { name, response });
+    await invoke('auth_finish_non_discoverable', { response });
 
     status = 'Authentication successful!';
   };
@@ -122,6 +140,16 @@
   <div class="row" style="margin-top: 1rem;">
     <button onclick={auth}>Authenticate</button>
   </div>
+  <form class="row" style="margin-top: 1rem;">
+    <input
+      class="greet-input"
+      placeholder="Enter a username..."
+      bind:value={authName}
+    />
+    <button onclick={auth_non_discoverable}
+      >Authenticate (no discovery)</button
+    >
+  </form>
   <p>Status: {status}</p>
   <form class="row">
     <input

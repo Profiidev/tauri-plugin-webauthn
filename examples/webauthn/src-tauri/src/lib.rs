@@ -4,7 +4,9 @@ use chrono::Local;
 use tauri::{async_runtime::Mutex, State, Url};
 use tauri_plugin_log::{RotationStrategy, Target, TargetKind, TimezoneStrategy};
 use webauthn_rs::{
-  prelude::{DiscoverableAuthentication, Passkey, PasskeyRegistration, Uuid},
+  prelude::{
+    DiscoverableAuthentication, Passkey, PasskeyAuthentication, PasskeyRegistration, Uuid,
+  },
   Webauthn, WebauthnBuilder,
 };
 use webauthn_rs_proto::{
@@ -77,6 +79,30 @@ async fn auth_start(
 }
 
 #[tauri::command]
+async fn auth_start_non_discoverable(
+  webauthn: State<'_, Webauthn>,
+  users: State<'_, Mutex<HashMap<String, Uuid>>>,
+  state: State<'_, Mutex<Option<PasskeyAuthentication>>>,
+  passkeys: State<'_, Mutex<HashMap<Uuid, Vec<Passkey>>>>,
+  name: &str,
+) -> Result<PublicKeyCredentialRequestOptions, ()> {
+  let users = users.lock().await;
+  let uuid = users.get(name).panic_log("User not found");
+
+  let passkeys = passkeys.lock().await;
+  let passkey = passkeys.get(uuid).panic_log("Passkey not found");
+
+  let (challenge, state_val) = webauthn
+    .start_passkey_authentication(passkey)
+    .panic_log("Failed to start authentication");
+
+  let mut state = state.lock().await;
+  state.replace(state_val);
+
+  Ok(challenge.public_key)
+}
+
+#[tauri::command]
 async fn auth_finish(
   webauthn: State<'_, Webauthn>,
   state: State<'_, Mutex<Option<DiscoverableAuthentication>>>,
@@ -103,6 +129,23 @@ async fn auth_finish(
   Ok(())
 }
 
+#[tauri::command]
+async fn auth_finish_non_discoverable(
+  webauthn: State<'_, Webauthn>,
+  state: State<'_, Mutex<Option<PasskeyAuthentication>>>,
+  response: PublicKeyCredential,
+) -> Result<(), ()> {
+  let passkey_auth = state
+    .lock()
+    .await
+    .take()
+    .panic_log("Failed to get passkey authentication state");
+  webauthn
+    .finish_passkey_authentication(&response, &passkey_auth)
+    .panic_log("Failed to finish authentication");
+  Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
@@ -119,6 +162,7 @@ pub fn run() {
       .unwrap(),
     )
     .manage(Mutex::new(Option::<DiscoverableAuthentication>::None))
+    .manage(Mutex::new(Option::<PasskeyAuthentication>::None))
     .manage(Mutex::new(Option::<(PasskeyRegistration, Uuid)>::None))
     .manage(Mutex::new(HashMap::<Uuid, Vec<Passkey>>::new()))
     .manage(Mutex::new(HashMap::<String, Uuid>::new()))
@@ -139,7 +183,9 @@ pub fn run() {
       reg_start,
       reg_finish,
       auth_start,
-      auth_finish
+      auth_finish,
+      auth_start_non_discoverable,
+      auth_finish_non_discoverable,
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
