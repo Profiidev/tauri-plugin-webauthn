@@ -3,7 +3,7 @@
     "examples/webauthn"
   ],
   "name": "tauri-plugin-webauthn-api",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "author": "profidev",
   "description": "A Tauri plugin for WebAuthn API",
   "repository": {
