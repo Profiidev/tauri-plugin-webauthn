@@ -8,29 +8,28 @@ use webauthn_rs_proto::{
   RegisterPublicKeyCredential, ResidentKeyRequirement,
 };
 
+use super::Authenticator;
+
 #[cfg(target_os = "ios")]
 tauri::ios_plugin_binding!(init_plugin_webauthn);
-
-// initializes the Kotlin or Swift plugin classes
-pub fn init<R: Runtime, C: DeserializeOwned>(
-  _app: &AppHandle<R>,
-  api: PluginApi<R, C>,
-) -> crate::Result<Webauthn<R>> {
-  #[cfg(target_os = "android")]
-  let handle = api.register_android_plugin("de.plugin.webauthn", "WebauthnPlugin")?;
-  #[cfg(target_os = "ios")]
-  let handle = api.register_ios_plugin(init_plugin_webauthn)?;
-  Ok(Webauthn(handle))
-}
 
 /// Access to the webauthn APIs.
 pub struct Webauthn<R: Runtime>(PluginHandle<R>);
 
-impl<R: Runtime> Webauthn<R> {
-  pub async fn register(
+impl<R: Runtime> Authenticator<R> for Webauthn<R> {
+  fn init<C: DeserializeOwned>(_app: &AppHandle<R>, api: PluginApi<R, C>) -> crate::Result<Self> {
+    #[cfg(target_os = "android")]
+    let handle = api.register_android_plugin("de.plugin.webauthn", "WebauthnPlugin")?;
+    #[cfg(target_os = "ios")]
+    let handle = api.register_ios_plugin(init_plugin_webauthn)?;
+    Ok(Webauthn(handle))
+  }
+
+  fn register(
     &self,
-    _: Url,
+    _origin: Url,
     mut options: PublicKeyCredentialCreationOptions,
+    _timeout: u32,
   ) -> crate::Result<RegisterPublicKeyCredential> {
     // This is required to make Android save the passkey
     if let Some(auth) = &mut options.authenticator_selection {
@@ -42,16 +41,15 @@ impl<R: Runtime> Webauthn<R> {
       .map_err(Into::into)
   }
 
-  pub async fn authenticate(
+  fn authenticate(
     &self,
-    _: Url,
+    _origin: Url,
     options: PublicKeyCredentialRequestOptions,
+    _timeout: u32,
   ) -> crate::Result<PublicKeyCredential> {
     self
       .0
       .run_mobile_plugin("authenticate", serde_json::to_string(&options)?)
       .map_err(Into::into)
   }
-
-  pub fn send_pin(&self, _: String) {}
 }

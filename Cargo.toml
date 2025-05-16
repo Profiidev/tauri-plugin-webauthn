@@ -26,6 +26,8 @@ serde = "1.0"
 thiserror = "2"
 webauthn-rs-proto = "0.5.0"
 log = { version = "0.4.27", optional = true }
+serde_json = "1.0.140"
+tokio = { version = "1.45.0", features = ["sync"] }
 
 [build-dependencies]
 tauri-plugin = { version = "2.2.0", features = ["build"] }
@@ -34,10 +36,15 @@ tauri-plugin = { version = "2.2.0", features = ["build"] }
 default = ["log"]
 log = ["dep:log"]
 
-[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
-webauthn-authenticator-rs = { version = "0.5.0", features = ["nfc", "usb"] }
+[target.'cfg(not(any(target_os = "android", target_os = "ios", target_os = "windows")))'.dependencies]
+authenticator = { version = "0.4.1", default-features = false, features = [
+  "crypto_openssl",
+] }
+serde_cbor_2 = "0.12.0-dev"
+openssl = "0.10.72"
+base64urlsafedata = "0.5.1"
+base64 = "0.22.1"
 futures = "0.3.31"
-tokio = "1.45.0"
 
 [target.'cfg(windows)'.dependencies]
 webauthn-authenticator-rs = { version = "0.5.0", features = [
@@ -45,6 +52,3 @@ webauthn-authenticator-rs = { version = "0.5.0", features = [
   "usb",
   "win10",
 ] }
-
-[target.'cfg(any(target_os = "android", target_os = "ios"))'.dependencies]
-serde_json = "1.0.140"

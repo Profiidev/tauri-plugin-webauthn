@@ -307,6 +307,18 @@
           "markdownDescription": "Denies the authenticate command without any pre-configured scope."
         },
         {
+          "description": "Enables the cancel command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-cancel",
+          "markdownDescription": "Enables the cancel command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the cancel command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-cancel",
+          "markdownDescription": "Denies the cancel command without any pre-configured scope."
+        },
+        {
           "description": "Enables the register command without any pre-configured scope.",
           "type": "string",
           "const": "allow-register",
@@ -317,6 +329,18 @@
           "type": "string",
           "const": "deny-register",
           "markdownDescription": "Denies the register command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the select_key command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-select-key",
+          "markdownDescription": "Enables the select_key command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the select_key command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-select-key",
+          "markdownDescription": "Denies the select_key command without any pre-configured scope."
         },
         {
           "description": "Enables the send_pin command without any pre-configured scope.",
@@ -331,10 +355,10 @@
           "markdownDescription": "Denies the send_pin command without any pre-configured scope."
         },
         {
-          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-register`\n- `allow-authenticate`\n- `allow-send-pin`",
+          "description": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-register`\n- `allow-authenticate`\n- `allow-send-pin`\n- `allow-select-key`\n- `allow-cancel`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-register`\n- `allow-authenticate`\n- `allow-send-pin`"
+          "markdownDescription": "Default permissions for the plugin\n#### This default permission set includes:\n\n- `allow-register`\n- `allow-authenticate`\n- `allow-send-pin`\n- `allow-select-key`\n- `allow-cancel`"
         }
       ]
     }

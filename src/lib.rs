@@ -1,25 +1,21 @@
+use authenticators::Authenticator;
 use tauri::{
   plugin::{Builder, TauriPlugin},
   Manager, Runtime,
 };
 
-pub use models::*;
-
-#[cfg(desktop)]
-mod desktop;
-#[cfg(mobile)]
-mod mobile;
-
+mod authenticators;
 mod commands;
 mod error;
-mod models;
 
 pub use error::{Error, Result};
 
-#[cfg(desktop)]
-use desktop::Webauthn;
+#[cfg(not(any(target_os = "android", target_os = "ios", target_os = "windows")))]
+type Webauthn<R> = authenticators::ctap2::Webauthn<R>;
+#[cfg(all(desktop, windows))]
+type Webauthn<R> = authenticators::windows::Webauthn<R>;
 #[cfg(mobile)]
-use mobile::Webauthn;
+type Webauthn<R> = authenticators::mobile::Webauthn<R>;
 
 /// Extensions to [`tauri::App`], [`tauri::AppHandle`] and [`tauri::Window`] to access the webauthn APIs.
 pub trait WebauthnExt<R: Runtime> {
@@ -39,12 +35,11 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
       commands::register,
       commands::authenticate,
       commands::send_pin,
+      commands::select_key,
+      commands::cancel,
     ])
     .setup(|app, api| {
-      #[cfg(mobile)]
-      let webauthn = mobile::init(app, api)?;
-      #[cfg(desktop)]
-      let webauthn = desktop::init(app, api)?;
+      let webauthn = Webauthn::init(app, api)?;
       app.manage(webauthn);
       Ok(())
     })

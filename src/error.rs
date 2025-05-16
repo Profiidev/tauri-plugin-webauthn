@@ -9,16 +9,21 @@ pub enum Error {
   #[cfg(mobile)]
   #[error(transparent)]
   PluginInvoke(#[from] tauri::plugin::mobile::PluginInvokeError),
-  #[cfg(desktop)]
+  #[cfg(all(desktop, windows))]
   #[error("WebAuthn error: {0:?}")]
   WebAuthn(webauthn_authenticator_rs::error::WebauthnCError),
-  #[cfg(mobile)]
   #[error(transparent)]
   SerdeJson(#[from] serde_json::Error),
   #[error("No token found")]
   NoToken,
   #[error("Failed to create authenticator")]
   Authenticator,
+  #[cfg(not(any(target_os = "android", target_os = "ios", target_os = "windows")))]
+  #[error(transparent)]
+  Ctap2(#[from] authenticator::errors::AuthenticatorError),
+  #[cfg(not(any(target_os = "android", target_os = "ios", target_os = "windows")))]
+  #[error(transparent)]
+  Cbor2(#[from] serde_cbor_2::Error),
 }
 
 impl Serialize for Error {
