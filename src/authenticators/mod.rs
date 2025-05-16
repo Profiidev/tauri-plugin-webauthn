@@ -7,10 +7,10 @@ use webauthn_rs_proto::{
 
 #[cfg(not(any(target_os = "android", target_os = "ios", target_os = "windows")))]
 pub mod ctap2;
-#[cfg(all(desktop, windows))]
-pub mod windows;
 #[cfg(mobile)]
 pub mod mobile;
+#[cfg(all(desktop, windows))]
+pub mod windows;
 
 pub trait Authenticator<R: Runtime>: Sized {
   fn init<C: DeserializeOwned>(app: &AppHandle<R>, api: PluginApi<R, C>) -> crate::Result<Self>;
