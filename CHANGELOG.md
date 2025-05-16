@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0] - 2025-05-16
+
+### 🚀 Features
+
+- Added cancelPin
+- Added windows native webauthn
+- Added option to set timeout
+
+### 🐛 Bug Fixes
+
+- Main thread blocking
+- Added cmd permissions
+- Cfg attributes incorrect
+
+### 🚜 Refactor
+
+- Switched to new authenticator lib for desktop
+- Updated ts with new events
+- Added back loggign
+- Converted ctap to trait
+- Removed feature and only depend on target
+- Added back android
+
+### 📚 Documentation
+
+- Made example working again
+- Add logging of expect message to example
+- Fixed example on windows
+- Added comments
+- Updated readme
+
+
 ## [0.1.1] - 2025-05-13
 
 ### 🚀 Features
