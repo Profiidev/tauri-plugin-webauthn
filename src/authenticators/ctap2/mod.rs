@@ -41,6 +41,7 @@ impl<R: Runtime> Authenticator<R> for Webauthn<R> {
     })
   }
 
+  /// Register a new credential using ctap2.
   fn register(
     &self,
     origin: Url,
@@ -59,6 +60,7 @@ impl<R: Runtime> Authenticator<R> for Webauthn<R> {
       })
   }
 
+  /// Authenticate using ctap2.
   fn authenticate(
     &self,
     origin: Url,
@@ -77,6 +79,7 @@ impl<R: Runtime> Authenticator<R> for Webauthn<R> {
       })
   }
 
+  /// Send a PIN to the authenticator does nothing if no PIN was requested.
   fn send_pin(&self, pin: String) {
     #[cfg(feature = "log")]
     log::debug!("Sending pin");
@@ -89,6 +92,8 @@ impl<R: Runtime> Authenticator<R> for Webauthn<R> {
     }
   }
 
+  /// Select a key from the authenticator where key is the index into the list received via the Event.
+  /// Does nothing if no selection was requested.
   fn select_key(&self, key: usize) {
     #[cfg(feature = "log")]
     log::debug!("Selecting key {}", key);
@@ -101,6 +106,7 @@ impl<R: Runtime> Authenticator<R> for Webauthn<R> {
     }
   }
 
+  /// Cancel the current operation.
   fn cancel(&self) {
     #[cfg(feature = "log")]
     log::debug!("Cancelling operation");

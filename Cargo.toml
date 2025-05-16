@@ -36,7 +36,7 @@ tauri-plugin = { version = "2.2.0", features = ["build"] }
 default = ["log"]
 log = ["dep:log"]
 
-[target.'cfg(target_os = "linux")'.dependencies]
+[target.'cfg(not(any(target_os = "android", target_os = "ios", target_os = "windows")))'.dependencies]
 authenticator = { version = "0.4.1", default-features = false, features = [
   "crypto_openssl",
 ] }

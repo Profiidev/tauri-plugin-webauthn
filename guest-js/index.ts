@@ -59,6 +59,13 @@ export type AuthKey = {
 
 export const EVENT_NAME = 'tauri-plugin-webauthn';
 
+/**
+ * Tries to register using the native WebAuthn API.
+ *
+ * @param origin The origin of the request. This is used to verify the request.
+ * @param options The webauthn options. This is used to create the request.
+ * @returns A promise that resolves to the registration response.
+ */
 export async function register(
   origin: string,
   options: PublicKeyCredentialCreationOptionsJSON
@@ -69,6 +76,13 @@ export async function register(
   });
 }
 
+/**
+ * Tries to authenticate using the native WebAuthn API.
+ *
+ * @param origin The origin of the request. This is used to verify the request.
+ * @param options The webauthn options. This is used to create the request.
+ * @returns A promise that resolves to the authentication response.
+ */
 export async function authenticate(
   origin: string,
   options: PublicKeyCredentialRequestOptionsJSON
@@ -79,22 +93,49 @@ export async function authenticate(
   });
 }
 
+/**
+ * Sends a pin to the authenticator.
+ * Does nothing on windows and mobile.
+ *
+ * @param pin The pin to send to the authenticator.
+ * @returns A promise that resolves when the pin has been sent.
+ */
 export async function sendPin(pin: string): Promise<void> {
   return await invoke('plugin:webauthn|send_pin', {
     pin
   });
 }
 
+/**
+ * Select a key from the list of keys received by the `selectKey` event.
+ * Does nothing on windows and mobile.
+ *
+ * @param uv The uv to send to the authenticator.
+ * @returns A promise that resolves when the uv has been sent.
+ */
 export async function selectKey(index: number): Promise<void> {
   return await invoke('plugin:webauthn|select_key', {
     key: index
   });
 }
 
+/**
+ * Cancels the current operation.
+ * Does nothing on windows and mobile.
+ *
+ * @returns A promise that resolves when the operation has been cancelled.
+ */
 export async function cancel(): Promise<void> {
   return await invoke('plugin:webauthn|cancel');
 }
 
+/**
+ * Creates a listener for the webauthn events.
+ * No events are triggered on windows and mobile.
+ *
+ * @param listener The listener to call when the event is triggered.
+ * @returns A promise that resolves to a function that can be used to unregister the listener.
+ */
 export async function registerListener(
   listener: (event: WebauthnEvent) => void
 ): Promise<UnlistenFn> {

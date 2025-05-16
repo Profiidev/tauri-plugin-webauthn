@@ -10,7 +10,7 @@ mod error;
 
 pub use error::{Error, Result};
 
-#[cfg(all(desktop, target_os = "linux"))]
+#[cfg(not(any(target_os = "android", target_os = "ios", target_os = "windows")))]
 type Webauthn<R> = authenticators::ctap2::Webauthn<R>;
 #[cfg(all(desktop, windows))]
 type Webauthn<R> = authenticators::windows::Webauthn<R>;

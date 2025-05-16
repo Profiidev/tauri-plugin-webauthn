@@ -1,6 +1,7 @@
 use authenticator::{ctap2::server::PublicKeyCredentialUserEntity, StatusPinUv, StatusUpdate};
 use serde::{Deserialize, Serialize};
 
+/// Nearly identical to the `StatusUpdate` enum, but serializable
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
 pub enum WebauthnEvent {
@@ -14,6 +15,7 @@ pub enum WebauthnEvent {
   },
 }
 
+/// Nearly identical to the `StatusPinUv` enum, but serializable
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
 pub enum PinEvent {

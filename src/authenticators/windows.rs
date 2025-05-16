@@ -23,6 +23,7 @@ impl<R: Runtime> Authenticator<R> for Webauthn<R> {
     })
   }
 
+  /// Register a new credential using native Windows API.
   fn register(
     &self,
     origin: Url,
@@ -39,6 +40,7 @@ impl<R: Runtime> Authenticator<R> for Webauthn<R> {
       })
   }
 
+  /// Authenticate using native Windows API.
   fn authenticate(
     &self,
     origin: Url,
