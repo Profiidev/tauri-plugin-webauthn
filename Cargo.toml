@@ -40,7 +40,7 @@ log = ["dep:log"]
 authenticator = { version = "0.4.1", default-features = false, features = [
   "crypto_openssl",
 ] }
-serde_cbor_2 = "0.12.0-dev"
+serde_cbor_2 = "0.13.0"
 openssl = "0.10.72"
 base64urlsafedata = "0.5.1"
 base64 = "0.22.1"
