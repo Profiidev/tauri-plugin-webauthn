@@ -49,13 +49,13 @@ impl<R: Runtime> Authenticator<R> for Webauthn<R> {
     timeout: u32,
   ) -> crate::Result<RegisterPublicKeyCredential> {
     #[cfg(feature = "log")]
-    log::info!("Registering with options: {:?}", options);
+    log::info!("Registering with options: {options:?}");
     let mut manager = self.manager.lock().unwrap();
     manager
       .perform_register(self.status_tx.clone(), origin, options, timeout as u64)
       .map_err(|e| {
         #[cfg(feature = "log")]
-        log::error!("Failed to register: {:?}", e);
+        log::error!("Failed to register: {e:?}");
         e
       })
   }
@@ -68,13 +68,13 @@ impl<R: Runtime> Authenticator<R> for Webauthn<R> {
     timeout: u32,
   ) -> crate::Result<PublicKeyCredential> {
     #[cfg(feature = "log")]
-    log::debug!("Authenticating with options: {:?}", options);
+    log::debug!("Authenticating with options: {options:?}");
     let mut manager = self.manager.lock().unwrap();
     manager
       .perform_authentication(self.status_tx.clone(), origin, options, timeout as u64)
       .map_err(|e| {
         #[cfg(feature = "log")]
-        log::error!("Failed to authenticate: {:?}", e);
+        log::error!("Failed to authenticate: {e:?}");
         e
       })
   }
@@ -96,7 +96,7 @@ impl<R: Runtime> Authenticator<R> for Webauthn<R> {
   /// Does nothing if no selection was requested.
   fn select_key(&self, key: usize) {
     #[cfg(feature = "log")]
-    log::debug!("Selecting key {}", key);
+    log::debug!("Selecting key {key}");
     let mut last_sender = None;
     while let Ok(sender) = self.select_receiver.lock().unwrap().try_recv() {
       last_sender = Some(sender);

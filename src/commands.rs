@@ -65,7 +65,7 @@ impl<T> ResultExt<T> for Result<T> {
   fn log(self) -> Self {
     if let Err(e) = &self {
       #[cfg(feature = "log")]
-      log::error!("Error: {}", e);
+      log::error!("Error: {e}");
     }
     self
   }
