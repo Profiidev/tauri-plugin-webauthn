@@ -13,7 +13,7 @@ jobs:
     if: ${{ github.actor == 'dependabot[bot]' }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Enable auto-merge for PR
         run: gh pr merge ${{ github.event.pull_request.number }} --auto --squash
         env:
