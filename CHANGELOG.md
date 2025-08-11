@@ -4,7 +4,6 @@ All notable changes to this project will be documented in this file.
 
 ## [0.2.1] - 2025-08-11
 
-
 ## [0.2.0] - 2025-05-16
 
 ### 🚀 Features
