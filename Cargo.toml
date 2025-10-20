@@ -3,7 +3,7 @@ members = ["examples/webauthn/src-tauri"]
 
 [package]
 name = "tauri-plugin-webauthn"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["profidev"]
 description = "a Tauri plugin for WebAuthn"
 license = "MIT"
