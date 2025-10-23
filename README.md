@@ -29,7 +29,7 @@ It is a nearly drop-in replacement for the `@simplewebauthn/browser` package wit
   }
   ...
   ```
-- A `keystore.properties` file in the `src-tauri/gen/android/app` directory. This is required to sign the app. The documentation for this file can be found [here](https://tauri.app/distribute/sign/android/)
+- A `keystore.properties` file in the `src-tauri/gen/android` directory. This is required to sign the app. The documentation for this file can be found [here](https://tauri.app/distribute/sign/android/)
 - Additionally you need to define a `assetslink.json` and this needs to be hosted under a domain you own. This is required to verify the app with the webauthn api. The documentation for this file can be found [here](https://developer.android.com/identity/sign-in/credential-manager#add-support-dal) and the file can be generated [here](https://developers.google.com/digital-asset-links/tools/generator). This also needs to be included in you app manifest file at `src-tauri/gen/android/app/src/main/AndroidManifest.xml`:
   ```xml
   ...
