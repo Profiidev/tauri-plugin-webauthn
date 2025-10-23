@@ -11,8 +11,11 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v5
+        if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
         with:
           token: ${{ secrets.PERSONAL_TOKEN }}
+      - uses: actions/checkout@v5
+        if: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
       - uses: dtolnay/rust-toolchain@stable
 
       - uses: awalsh128/cache-apt-pkgs-action@latest
@@ -35,6 +38,6 @@ jobs:
         with:
           rustfmt: true
           clippy: true
-          auto_fix: true
+          auto_fix: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
           prettier: true
           prettier_extensions: "css,html,js,json,jsx,md,sass,scss,ts,tsx,vue,yaml,yml,svelte"
