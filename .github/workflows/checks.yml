@@ -10,7 +10,7 @@ jobs:
       checks: write
       contents: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           token: ${{ secrets.PERSONAL_TOKEN }}
       - uses: dtolnay/rust-toolchain@stable
