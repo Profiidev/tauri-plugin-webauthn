@@ -16,3 +16,10 @@ node_modules/
 dist-js
 dist
 .cargo/
+
+# Devenv
+.devenv*
+devenv.local.nix
+
+# direnv
+.direnv
