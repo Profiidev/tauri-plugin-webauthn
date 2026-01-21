@@ -5,9 +5,14 @@ on:
 
 name: release-please
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   release-plz:
     name: Release-plz
+    environment: release
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -42,12 +47,10 @@ jobs:
         if: ${{ steps.release.outputs.releases_created == 'true' }}
         with:
           node-version: 22
-          registry-url: 'https://registry.npmjs.org'
+          registry-url: "https://registry.npmjs.org"
       - uses: bahmutov/npm-install@v1
         if: ${{ steps.release.outputs.releases_created == 'true' }}
         with:
           useLockFile: false
       - run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         if: ${{ steps.release.outputs.releases_created == 'true' }}
