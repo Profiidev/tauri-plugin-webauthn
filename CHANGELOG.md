@@ -11,8 +11,6 @@ All notable changes to this project will be documented in this file.
 - Npm trusted publish
 - Added devenv
 
-
-
 ## [0.2.0] - 2025-05-16
 
 ### 🚀 Features
