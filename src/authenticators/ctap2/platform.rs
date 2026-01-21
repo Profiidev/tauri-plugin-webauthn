@@ -283,7 +283,7 @@ fn convert_response_registration_extensions(
     hmac_secret: extensions.hmac_create_secret,
     cred_props: extensions
       .cred_props
-      .map(|c| webauthn_rs_proto::CredProps { rk: c.rk }),
+      .map(|c| webauthn_rs_proto::CredProps { rk: Some(c.rk) }),
     ..Default::default()
   }
 }

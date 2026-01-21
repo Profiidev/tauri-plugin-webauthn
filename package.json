@@ -8,7 +8,7 @@
   "description": "A Tauri plugin for WebAuthn API",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/profiidev/tauri-plugin-webauthn.git"
+    "url": "https://github.com/Profiidev/tauri-plugin-webauthn"
   },
   "license": "MIT",
   "type": "module",
