@@ -7,11 +7,17 @@ It is a nearly drop-in replacement for the `@simplewebauthn/browser` package wit
 | -------- | --------- |
 | Linux    | ✓         |
 | Windows  | ✓         |
-| macOS    | x         |
+| macOS    | ✓         |
 | Android  | ✓         |
 | iOS      | x         |
 
 ## Requirements
+
+### macOS
+
+macOS support uses Apple's ASAuthorization framework for native passkey and security key authentication. It requires macOS 13+, code signing with Associated Domains entitlements, and a provisioning profile.
+
+See [macos/README.md](macos/README.md) for setup instructions.
 
 ### Android
 
