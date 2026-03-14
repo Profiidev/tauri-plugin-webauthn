@@ -58,9 +58,7 @@ In `src-tauri/capabilities/default.json`, add the webauthn permission:
 
 ```json
 {
-  "permissions": [
-    "webauthn:default"
-  ]
+  "permissions": ["webauthn:default"]
 }
 ```
 
@@ -92,12 +90,12 @@ Replace `TEAM_ID` with your [Apple Developer Team ID](https://developer.apple.co
 
 **Why each entitlement is needed:**
 
-| Key | Purpose | Apple Docs |
-|-----|---------|------------|
-| [`com.apple.application-identifier`](https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_application-identifier) | Identifies the app to ASAuthorization. Without it: "The calling process does not have an application identifier" | [Application Identifier Entitlement](https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_application-identifier) |
-| [`com.apple.developer.team-identifier`](https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_developer_team-identifier) | Pairs with the application identifier for credential scoping | [Team Identifier Entitlement](https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_developer_team-identifier) |
-| [`com.apple.security.network.client`](https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_security_network_client) | Required for notarized apps to make outbound network connections | [Network Client Entitlement](https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_security_network_client) |
-| [`com.apple.developer.associated-domains`](https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_developer_associated-domains) | Links the app to your domain for passkey trust. Without it: "Application not associated with domain" | [Associated Domains Entitlement](https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_developer_associated-domains) |
+| Key                                                                                                                                                       | Purpose                                                                                                          | Apple Docs                                                                                                                                      |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`com.apple.application-identifier`](https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_application-identifier)             | Identifies the app to ASAuthorization. Without it: "The calling process does not have an application identifier" | [Application Identifier Entitlement](https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_application-identifier)   |
+| [`com.apple.developer.team-identifier`](https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_developer_team-identifier)       | Pairs with the application identifier for credential scoping                                                     | [Team Identifier Entitlement](https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_developer_team-identifier)       |
+| [`com.apple.security.network.client`](https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_security_network_client)           | Required for notarized apps to make outbound network connections                                                 | [Network Client Entitlement](https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_security_network_client)          |
+| [`com.apple.developer.associated-domains`](https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_developer_associated-domains) | Links the app to your domain for passkey trust. Without it: "Application not associated with domain"             | [Associated Domains Entitlement](https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_developer_associated-domains) |
 
 ### 6. Set up Apple Developer portal
 
@@ -124,6 +122,7 @@ Otherwise, create one manually in the Apple Developer portal under **Profiles** 
 ### 8. Code signing
 
 The app must be signed with:
+
 - A **Developer ID Application** certificate
 - The **entitlements plist** from step 5
 - The **provisioning profile** embedded in the bundle
@@ -222,6 +221,7 @@ Your server must serve an AASA file at `https://yourdomain.com/.well-known/apple
 ```
 
 Requirements:
+
 - Served over HTTPS with a valid TLS certificate
 - `Content-Type: application/json`
 - No redirects (Apple's CDN fetches it directly)
@@ -281,11 +281,11 @@ Example server-side registration options:
 
 ## Troubleshooting
 
-| Error | Cause | Fix |
-|-------|-------|-----|
-| "The calling process does not have an application identifier" | Missing `com.apple.application-identifier` in entitlements | Add it to Entitlements.plist with your Team ID + bundle ID |
-| "Application not associated with domain X" | Domain association not validated | Check: AASA is live, CDN has it, profile is embedded, app is registered with LaunchServices |
-| dyld: missing `libswift_Concurrency.dylib` | Missing Swift runtime rpath | Add `-Wl,-rpath,/usr/lib/swift` to build.rs |
-| "restricted entitlements... code signature validation failed" | Provisioning profile missing or doesn't include Associated Domains | Regenerate profile with Associated Domains capability enabled on the App ID |
-| `swcutil show` has no entries for your app | `swcd` hasn't scanned the app | Run `lsregister -f` on the .app or move it to `/Applications` |
-| Passkey works with iCloud Keychain but not 1Password | Expected behavior | 1Password doesn't support macOS Credential Provider API yet |
+| Error                                                         | Cause                                                              | Fix                                                                                         |
+| ------------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| "The calling process does not have an application identifier" | Missing `com.apple.application-identifier` in entitlements         | Add it to Entitlements.plist with your Team ID + bundle ID                                  |
+| "Application not associated with domain X"                    | Domain association not validated                                   | Check: AASA is live, CDN has it, profile is embedded, app is registered with LaunchServices |
+| dyld: missing `libswift_Concurrency.dylib`                    | Missing Swift runtime rpath                                        | Add `-Wl,-rpath,/usr/lib/swift` to build.rs                                                 |
+| "restricted entitlements... code signature validation failed" | Provisioning profile missing or doesn't include Associated Domains | Regenerate profile with Associated Domains capability enabled on the App ID                 |
+| `swcutil show` has no entries for your app                    | `swcd` hasn't scanned the app                                      | Run `lsregister -f` on the .app or move it to `/Applications`                               |
+| Passkey works with iCloud Keychain but not 1Password          | Expected behavior                                                  | 1Password doesn't support macOS Credential Provider API yet                                 |
