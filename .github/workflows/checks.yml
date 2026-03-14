@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          token: ${{ secrets.PERSONAL_TOKEN }}
+          token: ${{ github.event.pull_request.head.repo.full_name == github.repository && secrets.PERSONAL_TOKEN || github.token }}
       - uses: dtolnay/rust-toolchain@stable
 
       - uses: awalsh128/cache-apt-pkgs-action@latest
@@ -33,8 +33,9 @@ jobs:
       - name: Run linters
         uses: profiidev/rust-lint-action@v3
         with:
+          auto_fix: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
           rustfmt: true
           clippy: true
-          auto_fix: true
+          clippy_args: "--all-targets"
           prettier: true
           prettier_extensions: "css,html,js,json,jsx,md,sass,scss,ts,tsx,vue,yaml,yml,svelte"
