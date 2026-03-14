@@ -8,8 +8,8 @@ use serde::de::DeserializeOwned;
 use tauri::{plugin::PluginApi, AppHandle, Runtime, Url};
 use tokio::sync::oneshot;
 use webauthn_rs_proto::{
-  AuthenticatorAssertionResponseRaw, AuthenticatorAttestationResponseRaw,
-  PublicKeyCredential, PublicKeyCredentialCreationOptions, PublicKeyCredentialRequestOptions,
+  AuthenticatorAssertionResponseRaw, AuthenticatorAttestationResponseRaw, PublicKeyCredential,
+  PublicKeyCredentialCreationOptions, PublicKeyCredentialRequestOptions,
   RegisterPublicKeyCredential,
 };
 
@@ -138,11 +138,7 @@ impl<R: Runtime> Authenticator<R> for Webauthn<R> {
   }
 }
 
-unsafe extern "C" fn ffi_callback(
-  json: *const c_char,
-  error: *const c_char,
-  context: u64,
-) {
+unsafe extern "C" fn ffi_callback(json: *const c_char, error: *const c_char, context: u64) {
   let sender: Box<oneshot::Sender<Result<String, String>>> = Box::from_raw(context as *mut _);
 
   let result = if !json.is_null() {
