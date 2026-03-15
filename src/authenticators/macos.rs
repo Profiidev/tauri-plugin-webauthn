@@ -1,12 +1,13 @@
 use std::{
-  ffi::{c_char, c_uchar, c_void, CStr, CString},
+  ffi::{c_char, c_uchar, CStr, CString},
   marker::PhantomData,
+  sync::mpsc,
+  time::Duration,
 };
 
 use base64urlsafedata::Base64UrlSafeData;
 use serde::de::DeserializeOwned;
 use tauri::{plugin::PluginApi, AppHandle, Runtime, Url};
-use tokio::sync::oneshot;
 use webauthn_rs_proto::{
   AuthenticatorAssertionResponseRaw, AuthenticatorAttestationResponseRaw, PublicKeyCredential,
   PublicKeyCredentialCreationOptions, PublicKeyCredentialRequestOptions,
@@ -20,7 +21,6 @@ type WebauthnCallback =
 
 extern "C" {
   fn webauthn_register(
-    window_ptr: *mut c_void,
     domain: *const c_char,
     challenge_ptr: *const c_uchar,
     challenge_len: usize,
@@ -32,7 +32,6 @@ extern "C" {
   );
 
   fn webauthn_authenticate(
-    window_ptr: *mut c_void,
     domain: *const c_char,
     challenge_ptr: *const c_uchar,
     challenge_len: usize,
@@ -62,19 +61,18 @@ impl<R: Runtime> Authenticator<R> for Webauthn<R> {
     &self,
     _origin: Url,
     options: PublicKeyCredentialCreationOptions,
-    _timeout: u32,
+    timeout: u32,
   ) -> crate::Result<RegisterPublicKeyCredential> {
     let domain = to_cstring(options.rp.id.as_str())?;
     let challenge = options.challenge.as_slice();
     let username = to_cstring(options.user.name.as_str())?;
     let user_id = options.user.id.as_slice();
 
-    let (sender, receiver) = oneshot::channel::<Result<String, String>>();
+    let (sender, receiver) = mpsc::channel::<Result<String, String>>();
     let context = Box::into_raw(Box::new(sender)) as u64;
 
     unsafe {
       webauthn_register(
-        std::ptr::null_mut(),
         domain.as_ptr(),
         challenge.as_ptr(),
         challenge.len(),
@@ -86,7 +84,7 @@ impl<R: Runtime> Authenticator<R> for Webauthn<R> {
       );
     }
 
-    let json = await_swift_result(receiver)?;
+    let json = await_swift_result(receiver, timeout)?;
     parse_registration_response(&json)
   }
 
@@ -95,7 +93,7 @@ impl<R: Runtime> Authenticator<R> for Webauthn<R> {
     &self,
     _origin: Url,
     options: PublicKeyCredentialRequestOptions,
-    _timeout: u32,
+    timeout: u32,
   ) -> crate::Result<PublicKeyCredential> {
     let domain = to_cstring(options.rp_id.as_str())?;
     let challenge = options.challenge.as_slice();
@@ -118,12 +116,11 @@ impl<R: Runtime> Authenticator<R> for Webauthn<R> {
       .map(|c| c.as_ptr())
       .unwrap_or(std::ptr::null());
 
-    let (sender, receiver) = oneshot::channel::<Result<String, String>>();
+    let (sender, receiver) = mpsc::channel::<Result<String, String>>();
     let context = Box::into_raw(Box::new(sender)) as u64;
 
     unsafe {
       webauthn_authenticate(
-        std::ptr::null_mut(),
         domain.as_ptr(),
         challenge.as_ptr(),
         challenge.len(),
@@ -133,13 +130,13 @@ impl<R: Runtime> Authenticator<R> for Webauthn<R> {
       );
     }
 
-    let json = await_swift_result(receiver)?;
+    let json = await_swift_result(receiver, timeout)?;
     parse_authentication_response(&json)
   }
 }
 
 unsafe extern "C" fn ffi_callback(json: *const c_char, error: *const c_char, context: u64) {
-  let sender: Box<oneshot::Sender<Result<String, String>>> = Box::from_raw(context as *mut _);
+  let sender: Box<mpsc::Sender<Result<String, String>>> = Box::from_raw(context as *mut _);
 
   let result = if !json.is_null() {
     let json_str = CStr::from_ptr(json).to_string_lossy().into_owned();
@@ -157,9 +154,11 @@ unsafe extern "C" fn ffi_callback(json: *const c_char, error: *const c_char, con
 }
 
 fn await_swift_result(
-  receiver: oneshot::Receiver<Result<String, String>>,
+  receiver: mpsc::Receiver<Result<String, String>>,
+  timeout: u32,
 ) -> crate::Result<String> {
-  futures::executor::block_on(receiver)
+  receiver
+    .recv_timeout(Duration::from_millis(timeout as u64))
     .map_err(|_| crate::Error::Authenticator)?
     .map_err(|e| {
       #[cfg(feature = "log")]

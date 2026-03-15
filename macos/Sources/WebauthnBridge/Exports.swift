@@ -13,7 +13,6 @@ public typealias WebauthnCallback = @Sendable @convention(c) (
 
 @_cdecl("webauthn_register")
 public func webauthnRegister(
-    windowPtr: UnsafeMutableRawPointer?,
     domain: UnsafePointer<CChar>,
     challengePtr: UnsafePointer<UInt8>,
     challengeLen: UInt,
@@ -27,10 +26,9 @@ public func webauthnRegister(
     let challengeData = Data(bytes: challengePtr, count: Int(challengeLen))
     let usernameStr = String(cString: username)
     let userIdData = Data(bytes: userIdPtr, count: Int(userIdLen))
-    let windowWrapper = SendablePtr(ptr: windowPtr)
 
     Task { @MainActor in
-        let handler = PasskeyHandler(windowPtr: windowWrapper.ptr)
+        let handler = PasskeyHandler()
         do {
             let auth = try await handler.register(
                 domain: domainStr,
@@ -49,7 +47,6 @@ public func webauthnRegister(
 
 @_cdecl("webauthn_authenticate")
 public func webauthnAuthenticate(
-    windowPtr: UnsafeMutableRawPointer?,
     domain: UnsafePointer<CChar>,
     challengePtr: UnsafePointer<UInt8>,
     challengeLen: UInt,
@@ -59,7 +56,6 @@ public func webauthnAuthenticate(
 ) {
     let domainStr = String(cString: domain)
     let challengeData = Data(bytes: challengePtr, count: Int(challengeLen))
-    let windowWrapper = SendablePtr(ptr: windowPtr)
 
     var allowedCredentials: [Data] = []
     if let jsonPtr = allowCredentialsJson {
@@ -71,7 +67,7 @@ public func webauthnAuthenticate(
     }
 
     Task { @MainActor in
-        let handler = PasskeyHandler(windowPtr: windowWrapper.ptr)
+        let handler = PasskeyHandler()
         do {
             let auth = try await handler.authenticate(
                 domain: domainStr,
@@ -142,7 +138,10 @@ private func callbackWithJSON(_ json: [String: Any], context: UInt64, callback: 
     guard let jsonData = try? JSONSerialization.data(withJSONObject: json),
           let jsonStr = String(data: jsonData, encoding: .utf8) else {
         callbackWithError(
-            NSError(domain: "WebauthnBridge", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to serialize JSON"]),
+            NSError(
+                domain: "WebauthnBridge", code: -1,
+                userInfo: [NSLocalizedDescriptionKey: "Failed to serialize JSON"]
+            ),
             context: context,
             callback: callback
         )
@@ -157,10 +156,6 @@ private func callbackWithError(_ error: Error, context: UInt64, callback: Webaut
     error.localizedDescription.withCString { cStr in
         callback(nil, strdup(cStr), context)
     }
-}
-
-private struct SendablePtr: @unchecked Sendable {
-    let ptr: UnsafeMutableRawPointer?
 }
 
 extension Data {

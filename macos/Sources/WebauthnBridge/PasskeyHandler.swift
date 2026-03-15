@@ -6,17 +6,10 @@ import AppKit
 public final class PasskeyHandler: NSObject {
     private var registrationContinuation: CheckedContinuation<ASAuthorization, Error>?
     private var assertionContinuation: CheckedContinuation<ASAuthorization, Error>?
-    private let window: NSWindow?
 
-    public init(windowPtr: UnsafeMutableRawPointer?) {
-        if let ptr = windowPtr {
-            self.window = Unmanaged<NSWindow>.fromOpaque(ptr).takeUnretainedValue()
-        } else {
-            self.window = nil
-        }
-    }
-
-    public func register(domain: String, challenge: Data, username: String, userID: Data) async throws -> ASAuthorization {
+    public func register(
+        domain: String, challenge: Data, username: String, userID: Data
+    ) async throws -> ASAuthorization {
         let platformProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: domain)
         let platformRequest = platformProvider.createCredentialRegistrationRequest(
             challenge: challenge,
@@ -45,7 +38,9 @@ public final class PasskeyHandler: NSObject {
         }
     }
 
-    public func authenticate(domain: String, challenge: Data, allowCredentials: [Data]) async throws -> ASAuthorization {
+    public func authenticate(
+        domain: String, challenge: Data, allowCredentials: [Data]
+    ) async throws -> ASAuthorization {
         let platformProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: domain)
         let platformRequest = platformProvider.createCredentialAssertionRequest(challenge: challenge)
 
@@ -77,10 +72,12 @@ public final class PasskeyHandler: NSObject {
 
 extension PasskeyHandler: ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
     public func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-        return window ?? NSApplication.shared.windows.first ?? NSWindow()
+        return NSApplication.shared.windows.first ?? NSWindow()
     }
 
-    public func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization auth: ASAuthorization) {
+    public func authorizationController(
+        controller: ASAuthorizationController, didCompleteWithAuthorization auth: ASAuthorization
+    ) {
         if auth.credential is ASAuthorizationPlatformPublicKeyCredentialRegistration
             || auth.credential is ASAuthorizationSecurityKeyPublicKeyCredentialRegistration {
             registrationContinuation?.resume(returning: auth)
