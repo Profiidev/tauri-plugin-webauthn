@@ -12,8 +12,6 @@ All notable changes to this project will be documented in this file.
 - Added devenv
 - Fix fork prs
 
-
-
 ## [0.2.0] - 2025-05-16
 
 ### 🚀 Features
