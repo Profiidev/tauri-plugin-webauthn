@@ -23,3 +23,6 @@ devenv.local.nix
 
 # direnv
 .direnv
+
+# Swift
+macos/.build/
