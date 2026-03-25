@@ -8,14 +8,17 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       checks: write
-      contents: write
+      contents: read
+    environment: ${{ github.event.pull_request.head.repo.full_name == github.repository && 'internal-ci' || 'external-ci' }}
     steps:
       - uses: actions/checkout@v6
         with:
           token: ${{ github.event.pull_request.head.repo.full_name == github.repository && secrets.PERSONAL_TOKEN || github.token }}
+          ref: ${{ github.event.pull_request.head.ref }}
       - uses: dtolnay/rust-toolchain@stable
 
       - uses: awalsh128/cache-apt-pkgs-action@latest
+        if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
         with:
           packages: libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libudev-dev libpcsclite-dev
           version: 1.1
@@ -26,7 +29,9 @@ jobs:
         with:
           cache-on-failure: true
           shared-key: "linter_cache"
+          save-if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
       - uses: bahmutov/npm-install@v1
+        if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
         with:
           useLockFile: false
 
