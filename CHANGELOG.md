@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1] - 2026-04-06
+
+### ⚙️ Miscellaneous Tasks
+
+- Fix pipeline for fork prs
+- Use pull_request_target instead of pull_request event
+- Npm trusted publish
+- Added devenv
+- Fix fork prs
+- Fix permissions
+- Fix gh token
+
+
+
 ## [0.2.0] - 2025-05-16
 
 ### 🚀 Features
