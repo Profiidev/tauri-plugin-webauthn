@@ -1,13 +1,13 @@
-import {
+import type {
   PublicKeyCredentialCreationOptionsJSON,
   PublicKeyCredentialJSON,
   PublicKeyCredentialRequestOptionsJSON,
   RegistrationResponseJSON
 } from '@simplewebauthn/types';
 import { invoke } from '@tauri-apps/api/core';
-import { listen, UnlistenFn } from '@tauri-apps/api/event';
+import { type UnlistenFn, listen } from '@tauri-apps/api/event';
 
-export * as types from '@simplewebauthn/types';
+export type * as types from '@simplewebauthn/types';
 
 export type WebauthnEvent =
   | {
@@ -51,11 +51,11 @@ export enum PinEventType {
   UvBlocked = 'uvBlocked'
 }
 
-export type AuthKey = {
+export interface AuthKey {
   id: string;
   name?: string;
   displayName?: string;
-};
+}
 
 export const EVENT_NAME = 'tauri-plugin-webauthn';
 
@@ -66,15 +66,14 @@ export const EVENT_NAME = 'tauri-plugin-webauthn';
  * @param options The webauthn options. This is used to create the request.
  * @returns A promise that resolves to the registration response.
  */
-export async function register(
+export const register = async (
   origin: string,
   options: PublicKeyCredentialCreationOptionsJSON
-): Promise<RegistrationResponseJSON> {
-  return await invoke<RegistrationResponseJSON>('plugin:webauthn|register', {
-    origin,
-    options
+): Promise<RegistrationResponseJSON> =>
+  await invoke<RegistrationResponseJSON>('plugin:webauthn|register', {
+    options,
+    origin
   });
-}
 
 /**
  * Tries to authenticate using the native WebAuthn API.
@@ -83,15 +82,14 @@ export async function register(
  * @param options The webauthn options. This is used to create the request.
  * @returns A promise that resolves to the authentication response.
  */
-export async function authenticate(
+export const authenticate = async (
   origin: string,
   options: PublicKeyCredentialRequestOptionsJSON
-): Promise<PublicKeyCredentialJSON> {
-  return await invoke<PublicKeyCredentialJSON>('plugin:webauthn|authenticate', {
-    origin,
-    options
+): Promise<PublicKeyCredentialJSON> =>
+  await invoke<PublicKeyCredentialJSON>('plugin:webauthn|authenticate', {
+    options,
+    origin
   });
-}
 
 /**
  * Sends a pin to the authenticator.
@@ -100,11 +98,10 @@ export async function authenticate(
  * @param pin The pin to send to the authenticator.
  * @returns A promise that resolves when the pin has been sent.
  */
-export async function sendPin(pin: string): Promise<void> {
-  return await invoke('plugin:webauthn|send_pin', {
+export const sendPin = async (pin: string): Promise<void> =>
+  await invoke('plugin:webauthn|send_pin', {
     pin
   });
-}
 
 /**
  * Select a key from the list of keys received by the `selectKey` event.
@@ -113,11 +110,10 @@ export async function sendPin(pin: string): Promise<void> {
  * @param uv The uv to send to the authenticator.
  * @returns A promise that resolves when the uv has been sent.
  */
-export async function selectKey(index: number): Promise<void> {
-  return await invoke('plugin:webauthn|select_key', {
+export const selectKey = async (index: number): Promise<void> =>
+  await invoke('plugin:webauthn|select_key', {
     key: index
   });
-}
 
 /**
  * Cancels the current operation.
@@ -125,9 +121,8 @@ export async function selectKey(index: number): Promise<void> {
  *
  * @returns A promise that resolves when the operation has been cancelled.
  */
-export async function cancel(): Promise<void> {
-  return await invoke('plugin:webauthn|cancel');
-}
+export const cancel = async (): Promise<void> =>
+  await invoke('plugin:webauthn|cancel');
 
 /**
  * Creates a listener for the webauthn events.
@@ -136,10 +131,9 @@ export async function cancel(): Promise<void> {
  * @param listener The listener to call when the event is triggered.
  * @returns A promise that resolves to a function that can be used to unregister the listener.
  */
-export async function registerListener(
+export const registerListener = async (
   listener: (event: WebauthnEvent) => void
-): Promise<UnlistenFn> {
-  return listen(EVENT_NAME, (event) => {
-    listener(event.payload as WebauthnEvent);
+): Promise<UnlistenFn> =>
+  listen(EVENT_NAME, (event) => {
+    listener(event.payload as WebauthnEvent); // oxlint-disable-line no-unsafe-type-assertion
   });
-}
