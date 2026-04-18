@@ -1,0 +1,23 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:best-practices",
+    "group:allNonMajor",
+    ":automergeMinor",
+    "schedule:monthly"
+  ],
+  "packageRules": [
+    {
+      "abandonmentThreshold": "5 years",
+      "matchPackageNames": ["dotenvy", "figment"],
+      "matchDatasources": ["crate"]
+    }
+  ],
+  "osvVulnerabilityAlerts": true,
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "vulnerabilityFixStrategy": "highest",
+    "schedule": ["at any time"],
+    "automerge": true
+  }
+}
