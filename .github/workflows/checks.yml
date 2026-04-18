@@ -11,9 +11,14 @@ jobs:
       contents: read
     environment: ${{ github.event.pull_request.head.repo.full_name == github.repository && 'internal-ci' || 'external-ci' }}
     steps:
+      - uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3
+        id: app-token
+        if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+        with:
+          client-id: ${{ secrets.COMMIT_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.COMMIT_BOT_PRIVATE_KEY }}
       - uses: actions/checkout@v6
         with:
-          token: ${{ github.event.pull_request.head.repo.full_name == github.repository && secrets.PERSONAL_TOKEN || github.token }}
           ref: ${{ github.event.pull_request.head.ref }}
       - uses: dtolnay/rust-toolchain@stable
 
@@ -36,7 +41,7 @@ jobs:
           useLockFile: false
 
       - name: Run linters
-        uses: profiidev/rust-lint-action@v3
+        uses: profiidev/rust-lint-action@v4
         with:
           auto_fix: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
           rustfmt: true
@@ -44,3 +49,6 @@ jobs:
           clippy_args: "--all-targets"
           prettier: true
           prettier_extensions: "css,html,js,json,jsx,md,sass,scss,ts,tsx,vue,yaml,yml,svelte"
+          oxlint: true
+          git_sign_commits: true
+          github_token: ${{ github.event.pull_request.head.repo.full_name == github.repository && steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}

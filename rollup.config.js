@@ -1,11 +1,16 @@
-import { readFileSync } from 'fs';
-import { join } from 'path';
-import { cwd } from 'process';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { cwd } from 'node:process';
 import typescript from '@rollup/plugin-typescript';
 
 const pkg = JSON.parse(readFileSync(join(cwd(), 'package.json'), 'utf8'));
 
 export default {
+  external: [
+    /^@tauri-apps\/api/,
+    ...Object.keys(pkg.dependencies || {}),
+    ...Object.keys(pkg.peerDependencies || {})
+  ],
   input: 'guest-js/index.ts',
   output: [
     {
@@ -22,10 +27,5 @@ export default {
       declaration: true,
       declarationDir: `./${pkg.exports.import.split('/')[1]}`
     })
-  ],
-  external: [
-    /^@tauri-apps\/api/,
-    ...Object.keys(pkg.dependencies || {}),
-    ...Object.keys(pkg.peerDependencies || {})
   ]
 };

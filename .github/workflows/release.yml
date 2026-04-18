@@ -15,11 +15,15 @@ jobs:
     environment: release
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3
+        id: app-token
+        with:
+          client-id: ${{ secrets.COMMIT_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.COMMIT_BOT_PRIVATE_KEY }}
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          token: ${{ secrets.PERSONAL_TOKEN }}
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -40,8 +44,7 @@ jobs:
         uses: MarcoIeni/release-plz-action@v0.5
         id: release
         env:
-          GITHUB_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_API_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
 
       - uses: actions/setup-node@v6
         if: ${{ steps.release.outputs.releases_created == 'true' }}
