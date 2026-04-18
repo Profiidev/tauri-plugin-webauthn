@@ -21,32 +21,32 @@ jobs:
           client-id: ${{ secrets.COMMIT_BOT_CLIENT_ID }}
           private-key: ${{ secrets.COMMIT_BOT_PRIVATE_KEY }}
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 0
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
 
-      - uses: awalsh128/cache-apt-pkgs-action@latest
+      - uses: awalsh128/cache-apt-pkgs-action@2c09a5e66da6c8016428a2172bd76e5e4f14bb17 # latest
         with:
           packages: libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libudev-dev libpcsclite-dev
           version: 1.1
 
       - name: Cache cargo and rust files
         id: rust_cache
-        uses: Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
         with:
           cache-on-failure: true
           shared-key: "release"
 
       - name: Run release-plz
-        uses: MarcoIeni/release-plz-action@v0.5
+        uses: MarcoIeni/release-plz-action@1528104d2ca23787631a1c1f022abb64b34c1e11 # v0.5
         id: release
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         if: ${{ steps.release.outputs.releases_created == 'true' }}
         with:
           node-version: 24
