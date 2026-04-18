@@ -17,12 +17,12 @@ jobs:
         with:
           client-id: ${{ secrets.COMMIT_BOT_CLIENT_ID }}
           private-key: ${{ secrets.COMMIT_BOT_PRIVATE_KEY }}
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: ${{ github.event.pull_request.head.ref }}
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
 
-      - uses: awalsh128/cache-apt-pkgs-action@latest
+      - uses: awalsh128/cache-apt-pkgs-action@2c09a5e66da6c8016428a2172bd76e5e4f14bb17 # latest
         if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
         with:
           packages: libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libudev-dev libpcsclite-dev
@@ -30,7 +30,7 @@ jobs:
 
       - name: Cache cargo and rust files
         id: rust_cache
-        uses: Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
         with:
           cache-on-failure: true
           shared-key: "linter_cache"
@@ -41,7 +41,7 @@ jobs:
           useLockFile: false
 
       - name: Run linters
-        uses: profiidev/rust-lint-action@v4
+        uses: profiidev/rust-lint-action@ec3bf81f84ae2a9834fce8967d0eabe852227ff9 # v4
         with:
           auto_fix: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
           rustfmt: true
