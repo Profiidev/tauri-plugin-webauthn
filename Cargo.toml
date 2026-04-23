@@ -41,7 +41,7 @@ authenticator = { version = "0.5.0", default-features = false, features = [
   "crypto_openssl",
 ] }
 serde_cbor_2 = "0.13.0"
-openssl = "0.10.72"
+openssl = "0.10.78"
 base64urlsafedata = "0.5.1"
 base64 = "0.22.1"
 futures = "0.3.31"
