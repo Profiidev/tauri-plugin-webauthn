@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 ### 🐛 Bug Fixes
 
 - Lints
-- *(deps)* Update rust crate openssl to 0.10.78 [security] ([#60](https://github.com/Profiidev/tauri-plugin-webauthn/pull/60))
+- _(deps)_ Update rust crate openssl to 0.10.78 [security] ([#60](https://github.com/Profiidev/tauri-plugin-webauthn/pull/60))
 
 ### ⚙️ Miscellaneous Tasks
 
@@ -21,8 +21,6 @@ All notable changes to this project will be documented in this file.
 - Added oxlint
 - Use github app
 - Ignore deps
-
-
 
 ## [0.2.0] - 2025-05-16
 
