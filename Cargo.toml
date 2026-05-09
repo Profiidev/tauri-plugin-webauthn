@@ -21,7 +21,7 @@ exclude = [
 links = "tauri-plugin-webauthn"
 
 [dependencies]
-tauri = { version = "2.5.0" }
+tauri = { version = "2.11.1" }
 serde = "1.0"
 thiserror = "2"
 webauthn-rs-proto = "0.5.0"
