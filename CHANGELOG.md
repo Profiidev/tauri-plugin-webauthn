@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1] - 2026-05-09
+
+### 🐛 Bug Fixes
+
+- Lints
+- *(deps)* Update rust crate openssl to 0.10.78 [security] ([#60](https://github.com/Profiidev/tauri-plugin-webauthn/pull/60))
+- *(deps)* Update rust crate tauri to 2.11.1 [security] ([#63](https://github.com/Profiidev/tauri-plugin-webauthn/pull/63))
+- *(deps)* Update rust crate webauthn-authenticator-rs to 0.5.5 [security] ([#65](https://github.com/Profiidev/tauri-plugin-webauthn/pull/65))
+- *(deps)* Update rust crate openssl to 0.10.79 [security] ([#64](https://github.com/Profiidev/tauri-plugin-webauthn/pull/64))
+
+### ⚙️ Miscellaneous Tasks
+
+- Fix pipeline for fork prs
+- Use pull_request_target instead of pull_request event
+- Npm trusted publish
+- Added devenv
+- Fix fork prs
+- Fix permissions
+- Fix gh token
+- Added oxlint
+- Use github app
+- Ignore deps
+
+
+
 ## [0.2.0] - 2025-05-16
 
 ### 🚀 Features
