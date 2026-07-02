@@ -1,5 +1,10 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["github>profiidev/renovate-config"],
-  "ignorePaths": ["**/node_modules/**", "**/bower_components/**", "**/android/**", "**/ios/**"]
+  "ignorePaths": [
+    "**/node_modules/**",
+    "**/bower_components/**",
+    "**/android/**",
+    "**/ios/**"
+  ]
 }
