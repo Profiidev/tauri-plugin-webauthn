@@ -1,9 +1,10 @@
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import path from 'node:path';
 import { cwd } from 'node:process';
 import typescript from '@rollup/plugin-typescript';
 
-const pkg = JSON.parse(readFileSync(join(cwd(), 'package.json'), 'utf8'));
+// oxlint-disable-next-line max-nested-calls
+const pkg = JSON.parse(readFileSync(path.join(cwd(), 'package.json'), 'utf8'));
 
 export default {
   external: [
