@@ -17,12 +17,12 @@ jobs:
         with:
           client-id: ${{ secrets.COMMIT_BOT_CLIENT_ID }}
           private-key: ${{ secrets.COMMIT_BOT_PRIVATE_KEY }}
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ github.event.pull_request.head.ref }}
-      - uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
 
-      - uses: awalsh128/cache-apt-pkgs-action@2c09a5e66da6c8016428a2172bd76e5e4f14bb17 # latest
+      - uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # latest
         if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
         with:
           packages: libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libudev-dev libpcsclite-dev
@@ -41,7 +41,7 @@ jobs:
           useLockFile: false
 
       - name: Run linters
-        uses: profiidev/rust-lint-action@ec3bf81f84ae2a9834fce8967d0eabe852227ff9 # v4
+        uses: profiidev/rust-lint-action@790d64dd437b648791344cbb590636ae3a47c923 # v4
         with:
           auto_fix: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
           rustfmt: true
