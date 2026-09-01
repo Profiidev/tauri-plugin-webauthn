@@ -29,6 +29,7 @@
     "eslint/no-use-before-define": "off",
     "eslint/no-empty-function": "off",
     "eslint/max-params": "off",
+    "eslint/one-var": "off",
     "sort-imports": [
       "warn",
       {
