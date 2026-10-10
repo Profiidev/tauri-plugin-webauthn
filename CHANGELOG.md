@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 ### 🐛 Bug Fixes
 
 - Lints
-- *(deps)* Update all non-major dependencies
+- _(deps)_ Update all non-major dependencies
 
 ### ⚙️ Miscellaneous Tasks
 
@@ -33,8 +33,6 @@ All notable changes to this project will be documented in this file.
 - Renovate
 - Fix renovate env
 - Fix renovate env
-
-
 
 ## [0.2.0] - 2025-05-16
 
