@@ -22,7 +22,7 @@ env:
 jobs:
   renovate:
     runs-on: ubuntu-latest
-    environment: ${{ github.event.pull_request.head.repo.full_name == github.repository && 'internal-ci' || 'external-ci' }}
+    environment: internal-ci
     if: >
       github.event_name != 'issues' &&
       github.event_name != 'pull_request' ||
