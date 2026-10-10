@@ -22,6 +22,7 @@ env:
 jobs:
   renovate:
     runs-on: ubuntu-latest
+    environment: internal-ci
     if: >
       github.event_name != 'issues' &&
       github.event_name != 'pull_request' ||
