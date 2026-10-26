@@ -2,6 +2,39 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1] - 2026-10-26
+
+### 🐛 Bug Fixes
+
+- Lints
+- _(deps)_ Update all non-major dependencies
+- _(deps)_ Update rust crate tokio to 1.54.1 [security] ([#91](https://github.com/Profiidev/tauri-plugin-webauthn/pull/91))
+
+### ⚙️ Miscellaneous Tasks
+
+- Fix pipeline for fork prs
+- Use pull_request_target instead of pull_request event
+- Npm trusted publish
+- Added devenv
+- Fix fork prs
+- Fix permissions
+- Fix gh token
+- Added oxlint
+- Use github app
+- Ignore deps
+- Shared renovate config
+- Fix code style issues with prettier
+- Updated oxlint tsgo
+- Fix lints
+- Fix apt install
+- Fix checks apt install
+- Fix apt update
+- Use normal pr event
+- Use pr target event
+- Renovate
+- Fix renovate env
+- Fix renovate env
+
 ## [0.2.0] - 2025-05-16
 
 ### 🚀 Features
