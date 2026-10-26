@@ -7,8 +7,8 @@ All notable changes to this project will be documented in this file.
 ### 🐛 Bug Fixes
 
 - Lints
-- *(deps)* Update all non-major dependencies
-- *(deps)* Update rust crate tokio to 1.54.1 [security] ([#91](https://github.com/Profiidev/tauri-plugin-webauthn/pull/91))
+- _(deps)_ Update all non-major dependencies
+- _(deps)_ Update rust crate tokio to 1.54.1 [security] ([#91](https://github.com/Profiidev/tauri-plugin-webauthn/pull/91))
 
 ### ⚙️ Miscellaneous Tasks
 
@@ -34,8 +34,6 @@ All notable changes to this project will be documented in this file.
 - Renovate
 - Fix renovate env
 - Fix renovate env
-
-
 
 ## [0.2.0] - 2025-05-16
 
