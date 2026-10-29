@@ -9,6 +9,7 @@ use crate::prf::{
     PrfAuthenticationInput, PrfAuthenticationOutput, PrfRegistrationInput, PrfRegistrationOutput,
 };
 
+mod bridge_options;
 #[cfg(not(any(
     target_os = "android",
     target_os = "ios",
