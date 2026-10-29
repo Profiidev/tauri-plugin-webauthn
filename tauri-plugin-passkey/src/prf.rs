@@ -75,10 +75,24 @@ fn decode_salt(value: &Value, field: &str) -> crate::Result<Vec<u8>> {
     })
 }
 
+/// The CTAP2-level `hmacCreateSecret`/`hmacGetSecret` extensions are not a
+/// browser spelling and no backend honours them; silently ignoring them would
+/// let a caller believe it got key-derivation output it never will. Reject
+/// them whether or not `prf` is also present.
+fn reject_legacy_spelling(options: &Value, key: &str) -> crate::Result<()> {
+    if extensions(options).is_some_and(|e| e.contains_key(key)) {
+        return Err(crate::Error::Unsupported(format!(
+            "extensions.{key} is not supported; use the browser `prf` extension instead"
+        )));
+    }
+    Ok(())
+}
+
 /// Read the `prf` extension from browser creation options.
 pub fn registration_input_from_options(
     options: &Value,
 ) -> crate::Result<Option<PrfRegistrationInput>> {
+    reject_legacy_spelling(options, "hmacCreateSecret")?;
     let Some(prf) = extensions(options).and_then(|e| e.get("prf")) else {
         return Ok(None);
     };
@@ -96,9 +110,15 @@ pub fn registration_input_from_options(
 pub fn authentication_input_from_options(
     options: &Value,
 ) -> crate::Result<Option<PrfAuthenticationInput>> {
+    reject_legacy_spelling(options, "hmacGetSecret")?;
     let Some(prf) = extensions(options).and_then(|e| e.get("prf")) else {
         return Ok(None);
     };
+    if prf.get("evalByCredential").is_some() {
+        return Err(crate::Error::Unsupported(
+            "prf.evalByCredential is not supported; pass the salts in prf.eval instead".into(),
+        ));
+    }
     let first = prf
         .get("eval")
         .and_then(|e| e.get("first"))
@@ -122,9 +142,15 @@ pub fn authentication_input_from_options(
 #[cfg_attr(not(mobile), allow(dead_code))]
 fn extensions_mut(options: &mut Value) -> Option<&mut Map<String, Value>> {
     let obj = options.as_object_mut()?;
-    obj.entry("extensions")
+    let extensions = obj
+        .entry("extensions")
         .or_insert_with(|| Value::Object(Map::new()));
-    obj.get_mut("extensions").and_then(Value::as_object_mut)
+    // `extensions: null` (or any other non-object) would otherwise make the
+    // PRF input silently vanish; replace it with an empty object.
+    if !extensions.is_object() {
+        *extensions = Value::Object(Map::new());
+    }
+    extensions.as_object_mut()
 }
 
 /// Write `extensions.prf = {}` into options bound for a native WebAuthn layer.
@@ -330,6 +356,45 @@ mod tests {
         let options = json!({ "extensions": { "prf": { "eval": { "first": "c2FsdDE" } } } });
         let err = registration_input_from_options(&options).unwrap_err();
         assert_eq!(err.kind(), "unsupported");
+    }
+
+    #[test]
+    fn registration_input_rejects_legacy_hmac_create_secret() {
+        let options = json!({ "extensions": { "hmacCreateSecret": true } });
+        let err = registration_input_from_options(&options).unwrap_err();
+        assert_eq!(err.kind(), "unsupported");
+        assert!(err.to_string().contains("hmacCreateSecret"), "{err}");
+    }
+
+    #[test]
+    fn authentication_input_rejects_legacy_hmac_get_secret() {
+        let options = json!({
+            "extensions": { "hmacGetSecret": { "output1": "c2FsdDE" } }
+        });
+        let err = authentication_input_from_options(&options).unwrap_err();
+        assert_eq!(err.kind(), "unsupported");
+        assert!(err.to_string().contains("hmacGetSecret"), "{err}");
+    }
+
+    #[test]
+    fn authentication_input_rejects_eval_by_credential() {
+        let options = json!({
+            "extensions": { "prf": {
+                "eval": { "first": "c2FsdDE" },
+                "evalByCredential": { "Y3JlZC1pZA": { "first": "c2FsdDI" } }
+            } }
+        });
+        let err = authentication_input_from_options(&options).unwrap_err();
+        assert_eq!(err.kind(), "unsupported");
+        assert!(err.to_string().contains("eval"), "{err}");
+        assert!(err.to_string().contains("evalByCredential"), "{err}");
+    }
+
+    #[test]
+    fn extensions_null_is_replaced_by_object() {
+        let mut options = json!({ "extensions": null });
+        set_registration_prf_input(&mut options);
+        assert_eq!(options["extensions"]["prf"], json!({}));
     }
 
     #[test]
