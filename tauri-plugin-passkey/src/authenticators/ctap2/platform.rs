@@ -148,12 +148,9 @@ pub fn perform_register(
         response: webauthn_rs_proto::AuthenticatorAttestationResponseRaw {
             attestation_object: serde_cbor_2::to_vec(&result.att_obj)?.into(),
             client_data_json: Base64UrlSafeData::from(client_data),
-            transports: Some(vec![
-                AuthenticatorTransport::Usb,
-                AuthenticatorTransport::Nfc,
-                AuthenticatorTransport::Internal,
-                AuthenticatorTransport::Ble,
-            ]),
+            // Only the USB HID transport is registered in `init_manager`, so that
+            // is the only transport this credential can have been created over.
+            transports: Some(vec![AuthenticatorTransport::Usb]),
         },
         id: BASE64_URL_SAFE_NO_PAD.encode(&raw_id),
         raw_id: raw_id.into(),

@@ -26,11 +26,9 @@ pub(crate) async fn register<R: Runtime>(
     let prf_requested = prf.is_some();
     let options: PublicKeyCredentialCreationOptions = serde_json::from_value(options)?;
     crate::validation::validate_rp_id(&origin, &options.rp.id)?;
-    let (credential, prf_output) = block_in_place(|| {
-        app.webauthn()
-            .register(origin, options, prf, timeout.unwrap_or(DEFAULT_TIMEOUT))
-            .log()
-    })?;
+    let timeout = effective_timeout(timeout, options.timeout);
+    let (credential, prf_output) =
+        block_in_place(|| app.webauthn().register(origin, options, prf, timeout).log())?;
     // Unsupported PRF is web-shaped, not silent: if the caller asked for PRF
     // and no backend produced an output, report `prf.enabled = false` rather
     // than omitting `prf` entirely.
@@ -52,9 +50,10 @@ pub(crate) async fn authenticate<R: Runtime>(
     let prf_requested = prf.is_some();
     let options: PublicKeyCredentialRequestOptions = serde_json::from_value(options)?;
     crate::validation::validate_rp_id(&origin, &options.rp_id)?;
+    let timeout = effective_timeout(timeout, options.timeout);
     let (credential, prf_output) = block_in_place(|| {
         app.webauthn()
-            .authenticate(origin, options, prf, timeout.unwrap_or(DEFAULT_TIMEOUT))
+            .authenticate(origin, options, prf, timeout)
             .log()
     })?;
     // Never silently return no secret: if the caller passed salts and no
@@ -86,10 +85,36 @@ trait ResultExt<T> {
 
 impl<T> ResultExt<T> for Result<T> {
     fn log(self) -> Self {
+        #[cfg(feature = "log")]
         if let Err(e) = &self {
-            #[cfg(feature = "log")]
             log::error!("Error: {e}");
         }
         self
+    }
+}
+
+/// The ceremony timeout in milliseconds: the explicit `timeout` command argument
+/// wins, then the WebAuthn options' own `timeout`, then [`DEFAULT_TIMEOUT`].
+pub(crate) fn effective_timeout(arg: Option<u32>, options_timeout: Option<u32>) -> u32 {
+    arg.or(options_timeout).unwrap_or(DEFAULT_TIMEOUT)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn explicit_timeout_argument_wins_over_options() {
+        assert_eq!(effective_timeout(Some(5_000), Some(30_000)), 5_000);
+    }
+
+    #[test]
+    fn options_timeout_used_when_argument_absent() {
+        assert_eq!(effective_timeout(None, Some(30_000)), 30_000);
+    }
+
+    #[test]
+    fn default_timeout_when_both_absent() {
+        assert_eq!(effective_timeout(None, None), DEFAULT_TIMEOUT);
     }
 }
