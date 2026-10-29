@@ -8,6 +8,7 @@ mod authenticators;
 mod base64url;
 mod commands;
 mod error;
+mod inflight;
 mod normalize;
 mod prf;
 mod validation;
@@ -56,6 +57,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
         .setup(|app, api| {
             let webauthn = Webauthn::init(app, api)?;
             app.manage(webauthn);
+            app.manage(inflight::InFlight::default());
             Ok(())
         })
         .build()

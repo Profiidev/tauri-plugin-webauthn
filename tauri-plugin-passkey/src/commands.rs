@@ -1,10 +1,11 @@
 use serde_json::Value;
 use tauri::Url;
-use tauri::{command, AppHandle, Runtime};
+use tauri::{command, AppHandle, Manager, Runtime};
 use tokio::task::block_in_place;
 use webauthn_rs_proto::{PublicKeyCredentialCreationOptions, PublicKeyCredentialRequestOptions};
 
 use crate::authenticators::Authenticator;
+use crate::inflight::InFlight;
 use crate::Result;
 use crate::WebauthnExt;
 
@@ -27,6 +28,9 @@ pub(crate) async fn register<R: Runtime>(
     let options: PublicKeyCredentialCreationOptions = serde_json::from_value(options)?;
     crate::validation::validate_rp_id(&origin, &options.rp.id)?;
     let timeout = effective_timeout(timeout, options.timeout);
+    // Held until the ceremony returns; a concurrent ceremony gets `busy`.
+    let inflight = app.state::<InFlight>();
+    let _guard = inflight.acquire()?;
     let (credential, prf_output) =
         block_in_place(|| app.webauthn().register(origin, options, prf, timeout).log())?;
     // Unsupported PRF is web-shaped, not silent: if the caller asked for PRF
@@ -51,6 +55,9 @@ pub(crate) async fn authenticate<R: Runtime>(
     let options: PublicKeyCredentialRequestOptions = serde_json::from_value(options)?;
     crate::validation::validate_rp_id(&origin, &options.rp_id)?;
     let timeout = effective_timeout(timeout, options.timeout);
+    // Held until the ceremony returns; a concurrent ceremony gets `busy`.
+    let inflight = app.state::<InFlight>();
+    let _guard = inflight.acquire()?;
     let (credential, prf_output) = block_in_place(|| {
         app.webauthn()
             .authenticate(origin, options, prf, timeout)
