@@ -21,7 +21,7 @@ pub(crate) async fn register<R: Runtime>(
     mut options: Value,
     timeout: Option<u32>,
 ) -> Result<Value> {
-    crate::normalize::default_require_resident_key(&mut options);
+    crate::normalize::default_creation_options(&mut options);
     let prf = crate::prf::registration_input_from_options(&options)?;
     let prf_requested = prf.is_some();
     let options: PublicKeyCredentialCreationOptions = serde_json::from_value(options)?;
@@ -44,9 +44,10 @@ pub(crate) async fn register<R: Runtime>(
 pub(crate) async fn authenticate<R: Runtime>(
     app: AppHandle<R>,
     origin: Url,
-    options: Value,
+    mut options: Value,
     timeout: Option<u32>,
 ) -> Result<Value> {
+    crate::normalize::default_request_options(&mut options);
     let prf = crate::prf::authentication_input_from_options(&options)?;
     let prf_requested = prf.is_some();
     let options: PublicKeyCredentialRequestOptions = serde_json::from_value(options)?;

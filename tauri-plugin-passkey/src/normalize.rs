@@ -1,9 +1,11 @@
 //! Reconciles browser WebAuthn JSON with `webauthn-rs-proto`'s deserializer.
 //!
-//! The one remaining gap: `authenticatorSelection.requireResidentKey` has no serde
-//! default in the proto crate, so a spec-compliant client that omits it (the DOM
-//! type marks it optional and deprecated) fails to deserialize. PRF is not handled
-//! here — see [`crate::prf`].
+//! The proto crate has no serde defaults for several fields the WebAuthn spec marks
+//! optional — `authenticatorSelection.requireResidentKey` and `.userVerification`
+//! on creation, `allowCredentials` and `userVerification` on request — so a
+//! spec-compliant client that omits them would fail to deserialize. These helpers
+//! fill in the defaults a browser would. PRF is not handled here — see
+//! [`crate::prf`].
 
 use serde_json::Value;
 use webauthn_rs_proto::{
@@ -54,8 +56,36 @@ pub fn apply_android_resident_key(
     }
 }
 
+/// Fill in the spec defaults a browser applies to `PublicKeyCredentialCreationOptions`:
+/// `authenticatorSelection.requireResidentKey` (derived from `residentKey`) and
+/// `authenticatorSelection.userVerification: "preferred"`. A no-op when
+/// `authenticatorSelection` is absent.
+pub fn default_creation_options(options: &mut Value) {
+    default_require_resident_key(options);
+    if let Some(selection) = options
+        .get_mut("authenticatorSelection")
+        .and_then(Value::as_object_mut)
+    {
+        selection
+            .entry("userVerification")
+            .or_insert_with(|| Value::String("preferred".into()));
+    }
+}
+
+/// Fill in the spec defaults a browser applies to `PublicKeyCredentialRequestOptions`:
+/// `allowCredentials: []` and `userVerification: "preferred"`.
+pub fn default_request_options(options: &mut Value) {
+    let Some(obj) = options.as_object_mut() else {
+        return;
+    };
+    obj.entry("allowCredentials")
+        .or_insert_with(|| Value::Array(Vec::new()));
+    obj.entry("userVerification")
+        .or_insert_with(|| Value::String("preferred".into()));
+}
+
 /// Fill in `requireResidentKey` from `residentKey` when the caller omitted it.
-pub fn default_require_resident_key(options: &mut Value) {
+fn default_require_resident_key(options: &mut Value) {
     let Some(selection) = options
         .get_mut("authenticatorSelection")
         .and_then(Value::as_object_mut)
@@ -180,5 +210,44 @@ mod tests {
             options["authenticatorSelection"]["requireResidentKey"],
             json!(false)
         );
+    }
+
+    #[test]
+    fn request_defaults_do_not_clobber_explicit_user_verification() {
+        let mut options = json!({ "userVerification": "required" });
+        default_request_options(&mut options);
+        assert_eq!(options["userVerification"], json!("required"));
+        assert_eq!(options["allowCredentials"], json!([]));
+    }
+
+    #[test]
+    fn request_defaults_do_not_clobber_explicit_allow_credentials() {
+        let creds = json!([{ "type": "public-key", "id": "Y3JlZC1pZA" }]);
+        let mut options = json!({ "allowCredentials": creds.clone() });
+        default_request_options(&mut options);
+        assert_eq!(options["allowCredentials"], creds);
+        assert_eq!(options["userVerification"], json!("preferred"));
+    }
+
+    #[test]
+    fn creation_defaults_do_not_clobber_explicit_user_verification() {
+        let mut options = json!({ "authenticatorSelection": { "userVerification": "required" } });
+        default_creation_options(&mut options);
+        assert_eq!(
+            options["authenticatorSelection"]["userVerification"],
+            json!("required")
+        );
+        assert_eq!(
+            options["authenticatorSelection"]["requireResidentKey"],
+            json!(false)
+        );
+    }
+
+    #[test]
+    fn creation_defaults_are_a_no_op_without_authenticator_selection() {
+        let mut options = json!({ "rp": { "id": "example.com" } });
+        let before = options.clone();
+        default_creation_options(&mut options);
+        assert_eq!(options, before);
     }
 }

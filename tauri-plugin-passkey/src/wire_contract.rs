@@ -152,3 +152,43 @@ fn registration_options_reject_prf_eval() {
     let err = crate::prf::registration_input_from_options(&options).unwrap_err();
     assert_eq!(err.kind(), "unsupported");
 }
+
+/// A browser fills in `allowCredentials: []` and `userVerification: "preferred"`
+/// when the caller omits them; `webauthn-rs-proto` has no serde defaults for
+/// either, so `commands::authenticate` normalizes first.
+#[test]
+fn request_options_without_allow_credentials_or_user_verification_deserialize_after_normalization()
+{
+    let mut options = serde_json::json!({
+        "challenge": "Y2hhbGxlbmdlLWJ5dGVz",
+        "rpId": "example.com"
+    });
+    crate::normalize::default_request_options(&mut options);
+    let options: PublicKeyCredentialRequestOptions = serde_json::from_value(options)
+        .expect("spec-minimal request options must deserialize after normalization");
+    assert!(options.allow_credentials.is_empty());
+    assert_eq!(
+        options.user_verification,
+        webauthn_rs_proto::UserVerificationPolicy::Preferred
+    );
+}
+
+#[test]
+fn creation_options_with_selection_missing_user_verification_deserialize_after_normalization() {
+    let mut options = serde_json::json!({
+        "rp": { "id": "example.com", "name": "Example" },
+        "user": { "id": "dXNlci1pZA", "name": "alice", "displayName": "Alice" },
+        "challenge": "Y2hhbGxlbmdlLWJ5dGVz",
+        "pubKeyCredParams": [{ "type": "public-key", "alg": -7 }],
+        "authenticatorSelection": { "residentKey": "required" }
+    });
+    crate::normalize::default_creation_options(&mut options);
+    let options: PublicKeyCredentialCreationOptions = serde_json::from_value(options)
+        .expect("selection without userVerification must deserialize after normalization");
+    let selection = options.authenticator_selection.unwrap();
+    assert_eq!(
+        selection.user_verification,
+        webauthn_rs_proto::UserVerificationPolicy::Preferred
+    );
+    assert!(selection.require_resident_key);
+}
