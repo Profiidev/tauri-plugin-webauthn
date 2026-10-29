@@ -295,11 +295,11 @@ if [ "$PROFILE_HAS_IDENTITY" != yes ]; then
     exit 1
 fi
 
-# Resolve the target directory rather than assuming ../../target, which is
+# Resolve the target directory rather than assuming src-tauri/target, which is
 # wrong under CARGO_TARGET_DIR or a custom --target.
 TARGET_DIR=$(cd src-tauri && cargo metadata --format-version 1 --no-deps 2>/dev/null | jq -r '.target_directory')
 if [ -z "$TARGET_DIR" ] || [ "$TARGET_DIR" = "null" ]; then
-    TARGET_DIR="$SCRIPT_DIR/../../target"
+    TARGET_DIR="$SCRIPT_DIR/src-tauri/target"
 fi
 
 # ---------------------------------------------------------------------------

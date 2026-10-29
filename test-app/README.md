@@ -175,7 +175,7 @@ cd test-app
 Run the binary directly to pass environment variables (using `open` will not forward them):
 
 ```bash
-../../target/debug/bundle/macos/webauthn.app/Contents/MacOS/webauthn
+src-tauri/target/debug/bundle/macos/webauthn.app/Contents/MacOS/webauthn
 ```
 
 ### iOS

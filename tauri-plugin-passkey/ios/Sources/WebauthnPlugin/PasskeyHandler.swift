@@ -9,6 +9,7 @@ final class PasskeyHandler: NSObject {
     private var timeoutTask: Task<Void, Never>?
 
     func register(_ params: RegistrationParameters) async throws -> ASAuthorization {
+        try CeremonyOptions.requireES256(params.algorithms)
         let userVerification = CeremonyOptions.userVerification(params.userVerification)
         let attestation = CeremonyOptions.attestation(params.attestation)
         var requests: [ASAuthorizationRequest] = []

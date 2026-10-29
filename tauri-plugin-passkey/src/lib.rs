@@ -58,7 +58,16 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, Option<Config>> {
         ])
         .setup(|app, api| {
             // An absent `plugins.dkackman-passkey` entry arrives as `null` (None).
-            app.manage(api.config().clone().unwrap_or_default());
+            let config = api.config().clone().unwrap_or_default();
+            #[cfg(feature = "log")]
+            if config.rejects_every_origin() {
+                log::warn!(
+                    "plugins.dkackman-passkey.allowedOrigins is set but contains no usable \
+                     http(s) origin {:?}; every register/authenticate call will be rejected",
+                    config.allowed_origins
+                );
+            }
+            app.manage(config);
             let webauthn = Webauthn::init(app, api)?;
             app.manage(webauthn);
             app.manage(inflight::InFlight::default());

@@ -196,6 +196,15 @@ enum CeremonyOptions {
         attachment != "platform"
     }
 
+    /// Apple authenticators (platform passkeys and security keys) create ES256
+    /// keys only. Fail before showing any UI when the RP's non-empty
+    /// `pubKeyCredParams` excludes ES256 (-7); an empty list means no preference.
+    static func requireES256(_ algs: [Int]) throws {
+        guard algs.isEmpty || algs.contains(-7) else {
+            throw PasskeyHandlerError.unsupportedAlgorithm
+        }
+    }
+
     /// ASAuthorization security-key registration supports ES256 only. An empty
     /// list (no preference) means ES256; a list without ES256 (-7) yields no
     /// parameters, meaning a security key cannot satisfy the RP.
@@ -233,6 +242,7 @@ enum PasskeyHandlerError: LocalizedError {
     case invalidOptions(String)
     case prfUnavailable
     case noAuthenticatorMatches
+    case unsupportedAlgorithm
 
     var errorDescription: String? {
         switch self {
@@ -241,6 +251,8 @@ enum PasskeyHandlerError: LocalizedError {
         case let .invalidOptions(message): return message
         case .prfUnavailable: return "PRF requires macOS 15 or later"
         case .noAuthenticatorMatches: return "No available authenticator satisfies the requested options"
+        case .unsupportedAlgorithm:
+            return "pubKeyCredParams does not include ES256 (-7), the only algorithm Apple authenticators support"
         }
     }
 }
@@ -257,7 +269,7 @@ enum PluginErrorCode {
         }
         if let handlerError = error as? PasskeyHandlerError {
             switch handlerError {
-            case .prfUnavailable, .noAuthenticatorMatches: return "unsupported"
+            case .prfUnavailable, .noAuthenticatorMatches, .unsupportedAlgorithm: return "unsupported"
             default: return nil
             }
         }

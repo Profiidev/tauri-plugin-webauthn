@@ -280,6 +280,22 @@ final class CeremonyOptionsTests: XCTestCase {
         XCTAssertEqual(CeremonyOptions.securityKeyAlgorithms([-257, -8]).count, 0)
     }
 
+    func testRequireES256PassesWhenES256IsAllowed() {
+        XCTAssertNoThrow(try CeremonyOptions.requireES256([]))
+        XCTAssertNoThrow(try CeremonyOptions.requireES256([-7]))
+        XCTAssertNoThrow(try CeremonyOptions.requireES256([-257, -7, -8]))
+    }
+
+    func testRequireES256ThrowsWhenES256IsAbsent() {
+        // Gates passkeys and security keys alike: neither can produce anything but ES256.
+        XCTAssertThrowsError(try CeremonyOptions.requireES256([-257, -8])) { error in
+            guard case PasskeyHandlerError.unsupportedAlgorithm = error else {
+                return XCTFail("expected unsupportedAlgorithm, got \(error)")
+            }
+            XCTAssertEqual(PluginErrorCode.from(error), "unsupported")
+        }
+    }
+
     func testTimeoutDefaultsWhenAbsentOrNonPositive() {
         XCTAssertEqual(CeremonyOptions.defaultTimeoutMilliseconds, 60000)
         XCTAssertEqual(CeremonyOptions.timeoutMilliseconds(nil), 60000)
@@ -316,6 +332,7 @@ final class PluginErrorCodeTests: XCTestCase {
     func testUnsupportedHandlerErrors() {
         XCTAssertEqual(PluginErrorCode.from(PasskeyHandlerError.prfUnavailable), "unsupported")
         XCTAssertEqual(PluginErrorCode.from(PasskeyHandlerError.noAuthenticatorMatches), "unsupported")
+        XCTAssertEqual(PluginErrorCode.from(PasskeyHandlerError.unsupportedAlgorithm), "unsupported")
     }
 
     func testOtherErrorsHaveNoCode() {
@@ -328,6 +345,10 @@ final class PluginErrorCodeTests: XCTestCase {
     func testUnsupportedErrorMessages() {
         XCTAssertEqual(PasskeyHandlerError.prfUnavailable.errorDescription, "PRF requires macOS 15 or later")
         XCTAssertNotNil(PasskeyHandlerError.noAuthenticatorMatches.errorDescription)
+        XCTAssertEqual(
+            PasskeyHandlerError.unsupportedAlgorithm.errorDescription,
+            "pubKeyCredParams does not include ES256 (-7), the only algorithm Apple authenticators support"
+        )
         XCTAssertNotNil(TimeoutError().errorDescription)
     }
 }

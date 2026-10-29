@@ -105,8 +105,12 @@ impl<T> ResultExt<T> for Result<T> {
 
 /// The ceremony timeout in milliseconds: the explicit `timeout` command argument
 /// wins, then the WebAuthn options' own `timeout`, then [`DEFAULT_TIMEOUT`].
+/// A zero at either level is treated as absent (it would otherwise time out
+/// immediately).
 pub(crate) fn effective_timeout(arg: Option<u32>, options_timeout: Option<u32>) -> u32 {
-    arg.or(options_timeout).unwrap_or(DEFAULT_TIMEOUT)
+    arg.filter(|t| *t > 0)
+        .or(options_timeout.filter(|t| *t > 0))
+        .unwrap_or(DEFAULT_TIMEOUT)
 }
 
 #[cfg(test)]
@@ -126,5 +130,16 @@ mod tests {
     #[test]
     fn default_timeout_when_both_absent() {
         assert_eq!(effective_timeout(None, None), DEFAULT_TIMEOUT);
+    }
+
+    #[test]
+    fn zero_argument_falls_back_to_options() {
+        assert_eq!(effective_timeout(Some(0), Some(30_000)), 30_000);
+    }
+
+    #[test]
+    fn zero_everywhere_falls_back_to_default() {
+        assert_eq!(effective_timeout(Some(0), Some(0)), DEFAULT_TIMEOUT);
+        assert_eq!(effective_timeout(None, Some(0)), DEFAULT_TIMEOUT);
     }
 }

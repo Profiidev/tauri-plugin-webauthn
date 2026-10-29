@@ -125,7 +125,7 @@ pnpm tauri dev              # Windows/Linux
 
 # macOS (needs a signed .app bundle, not the raw binary)
 ./build-macos-dev.sh
-open src-tauri/target/debug/bundle/macos/test-app.app
+open src-tauri/target/debug/bundle/macos/webauthn.app   # productName in src-tauri/tauri.conf.json
 ```
 
 On NDK r23+ (r29 confirmed) the Android build fails while cross-compiling the test app's

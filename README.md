@@ -99,7 +99,7 @@ runs the raw binary, which ASAuthorizationController will refuse. Use:
 ```bash
 cd test-app
 ./build-macos-dev.sh
-open src-tauri/target/debug/bundle/macos/test-app.app
+open src-tauri/target/debug/bundle/macos/webauthn.app
 ```
 
 ## Before committing

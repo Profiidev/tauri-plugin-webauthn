@@ -58,10 +58,7 @@ pub fn validate_origin_allowed(origin: &Url, allowed: &[String]) -> crate::Resul
     let origin = origin.origin().ascii_serialization();
     let permitted = allowed
         .iter()
-        .filter_map(|entry| Url::parse(entry).ok())
-        // An opaque origin (non-special scheme such as `tauri://`) serializes as
-        // "null" and would match every other opaque origin; skip it.
-        .filter(|entry| entry.origin().is_tuple())
+        .filter_map(|entry| usable_allowed_origin(entry))
         .any(|entry| entry.origin().ascii_serialization() == origin);
     if permitted {
         Ok(())
@@ -70,6 +67,14 @@ pub fn validate_origin_allowed(origin: &Url, allowed: &[String]) -> crate::Resul
             "origin {origin} is not in plugins.dkackman-passkey.allowedOrigins"
         )))
     }
+}
+
+/// Parses an `allowedOrigins` entry, returning it only if it can ever match:
+/// it must parse as a URL with a tuple (http/https) origin. An opaque origin
+/// (non-special scheme such as `tauri://`) serializes as "null" and would match
+/// every other opaque origin, so it is treated as unusable.
+pub(crate) fn usable_allowed_origin(entry: &str) -> Option<Url> {
+    Url::parse(entry).ok().filter(|url| url.origin().is_tuple())
 }
 
 fn validation_error(msg: &str) -> crate::Error {

@@ -256,7 +256,7 @@ sudo swcutil dl -d yourdomain.com  # fetches AASA directly (bypasses CDN)
 
 The `rpId` in your WebAuthn options must match a domain listed in your associated domains entitlement. This is **not** the Tauri webview origin (`tauri://localhost`) - it's your actual domain, and the `origin` you pass to `register`/`authenticate` must be an `https` origin on it (e.g. `https://example.com`).
 
-The associated-domains entitlement is what binds the rpId to your app on macOS. You can additionally pin the origin with `plugins.dkackman-passkey.allowedOrigins` in `tauri.conf.json` (see the plugin README's [Security model](../README.md#security-model)); list `https://` origins there — a `tauri://localhost` entry is ignored.
+The associated-domains entitlement is what binds the rpId to your app on macOS. You can additionally pin the origin with `plugins.dkackman-passkey.allowedOrigins` in `tauri.conf.json` (see the plugin README's [Security model](../README.md#security-model)); list `https://` origins there — a `tauri://localhost` entry matches nothing, and a non-empty list with no usable `http(s)` entry rejects every origin (fail closed); the plugin logs a warning at startup in that case.
 
 Example server-side registration options:
 
@@ -298,7 +298,7 @@ The macOS bridge shares its option mapping with iOS (`Options.swift`):
 
 - `userVerification`, `attestation` and `excludeCredentials` are applied to both the passkey and the security-key request.
 - `authenticatorSelection.authenticatorAttachment: "platform"` offers only passkeys; `"cross-platform"` offers only security keys.
-- Security-key registration supports ES256 only. If `pubKeyCredParams` is non-empty and lacks ES256 (`-7`), no security-key request is made; if nothing is left to offer, registration fails with `unsupported`.
+- Registration supports ES256 only, for passkeys and security keys alike. If `pubKeyCredParams` is non-empty and lacks ES256 (`-7`), registration fails with `unsupported` before any system UI is shown.
 - Ignored: `residentKey`, `hints`, credential `transports` (all transports are allowed), and `authenticatorAttachment` at authentication.
 - The handler cancels the sheet itself when the timeout elapses (default 60000 ms) and reports a timeout; Rust gives up 2 s later as a backstop.
 
