@@ -4,9 +4,8 @@
 //! serialises, with the PRF extension in its browser spelling and a top-level
 //! `timeout` (ms) so the native layer can dismiss its own UI when it elapses.
 
-// Only the macOS backend uses this module so far; mobile.rs switches to it in
-// a follow-up.
-#![cfg_attr(not(target_os = "macos"), allow(dead_code))]
+// macOS, iOS and Android use this module; Linux and Windows do not.
+#![cfg_attr(not(any(target_os = "macos", mobile)), allow(dead_code))]
 
 use serde_json::Value;
 use webauthn_rs_proto::{PublicKeyCredentialCreationOptions, PublicKeyCredentialRequestOptions};
@@ -140,5 +139,22 @@ mod tests {
         let v = parse(&authenticate_options_json(&request_options(), None, 5000).unwrap());
         assert!(v["extensions"]["prf"].is_null());
         assert_eq!(v["timeout"], 5000);
+    }
+
+    #[test]
+    fn set_timeout_overrides_existing_timeout() {
+        let mut v = serde_json::json!({ "challenge": "abc", "timeout": 1 });
+        set_timeout(&mut v, 45_000);
+        assert_eq!(
+            v,
+            serde_json::json!({ "challenge": "abc", "timeout": 45_000 })
+        );
+    }
+
+    #[test]
+    fn set_timeout_leaves_non_object_untouched() {
+        let mut v = serde_json::json!("not an object");
+        set_timeout(&mut v, 45_000);
+        assert_eq!(v, serde_json::json!("not an object"));
     }
 }

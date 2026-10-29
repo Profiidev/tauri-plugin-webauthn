@@ -24,8 +24,6 @@ pub mod mobile;
 #[cfg(all(desktop, windows))]
 pub mod windows;
 
-mod bridge_timeout;
-
 pub trait Authenticator<R: Runtime>: Sized {
     fn init<C: DeserializeOwned>(app: &AppHandle<R>, api: PluginApi<R, C>) -> crate::Result<Self>;
     /// Register a new webauthn credential.

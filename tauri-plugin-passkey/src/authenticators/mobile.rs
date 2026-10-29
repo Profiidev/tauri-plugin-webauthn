@@ -48,16 +48,12 @@ impl<R: Runtime> Authenticator<R> for Webauthn<R> {
             options
         };
 
-        let mut options = serde_json::to_value(&options)?;
-        if prf.is_some() {
-            // Credential Manager and ASAuthorization both want the browser spelling.
-            crate::prf::set_registration_prf_input(&mut options);
-        }
-        super::bridge_timeout::with_timeout(&mut options, timeout);
+        // Credential Manager and ASAuthorization both want the browser spelling.
+        let options = super::bridge_options::register_options_json(&options, prf, timeout)?;
 
         let v: serde_json::Value = self
             .0
-            .run_mobile_plugin("register", serde_json::to_string(&options)?)
+            .run_mobile_plugin("register", options)
             .map_err(map_invoke_error)?;
 
         Ok((
@@ -73,15 +69,12 @@ impl<R: Runtime> Authenticator<R> for Webauthn<R> {
         prf: Option<PrfAuthenticationInput>,
         timeout: u32,
     ) -> crate::Result<(PublicKeyCredential, Option<PrfAuthenticationOutput>)> {
-        let mut options = serde_json::to_value(&options)?;
-        if let Some(prf) = &prf {
-            crate::prf::set_authentication_prf_input(&mut options, prf);
-        }
-        super::bridge_timeout::with_timeout(&mut options, timeout);
+        let options =
+            super::bridge_options::authenticate_options_json(&options, prf.as_ref(), timeout)?;
 
         let v: serde_json::Value = self
             .0
-            .run_mobile_plugin("authenticate", serde_json::to_string(&options)?)
+            .run_mobile_plugin("authenticate", options)
             .map_err(map_invoke_error)?;
 
         Ok((
