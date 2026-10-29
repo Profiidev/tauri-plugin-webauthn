@@ -47,8 +47,8 @@ impl<R: Runtime, T: Manager<R>> crate::WebauthnExt<R> for T {
 }
 
 /// Initializes the plugin.
-pub fn init<R: Runtime>() -> TauriPlugin<R, Config> {
-    Builder::<R, Config>::new("passkey")
+pub fn init<R: Runtime>() -> TauriPlugin<R, Option<Config>> {
+    Builder::<R, Option<Config>>::new("passkey")
         .invoke_handler(tauri::generate_handler![
             commands::register,
             commands::authenticate,
@@ -57,7 +57,8 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, Config> {
             commands::cancel,
         ])
         .setup(|app, api| {
-            app.manage(api.config().clone());
+            // An absent `plugins.passkey` entry arrives as `null` (None).
+            app.manage(api.config().clone().unwrap_or_default());
             let webauthn = Webauthn::init(app, api)?;
             app.manage(webauthn);
             app.manage(inflight::InFlight::default());

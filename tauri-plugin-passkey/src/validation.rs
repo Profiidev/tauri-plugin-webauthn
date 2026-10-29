@@ -49,7 +49,8 @@ pub fn validate_rp_id(origin: &Url, rp_id: &str) -> crate::Result<()> {
 /// Otherwise the origin's ASCII serialization must equal one of the entries'
 /// — each entry is parsed as a URL and reduced to its origin, so
 /// `"https://example.com/"` and `"https://example.com"` are equivalent.
-/// Entries that do not parse are skipped (they match nothing).
+/// Entries that do not parse, or whose origin is opaque (non-http(s) schemes
+/// such as `tauri://localhost`), are skipped (they match nothing).
 pub fn validate_origin_allowed(origin: &Url, allowed: &[String]) -> crate::Result<()> {
     if allowed.is_empty() {
         return Ok(());
@@ -58,6 +59,9 @@ pub fn validate_origin_allowed(origin: &Url, allowed: &[String]) -> crate::Resul
     let permitted = allowed
         .iter()
         .filter_map(|entry| Url::parse(entry).ok())
+        // An opaque origin (non-special scheme such as `tauri://`) serializes as
+        // "null" and would match every other opaque origin; skip it.
+        .filter(|entry| entry.origin().is_tuple())
         .any(|entry| entry.origin().ascii_serialization() == origin);
     if permitted {
         Ok(())
@@ -216,5 +220,12 @@ mod tests {
         assert!(validate_origin_allowed(&url("https://example.com"), &list).is_ok());
         let list = allowed(&["not a url"]);
         assert!(validate_origin_allowed(&url("https://example.com"), &list).is_err());
+    }
+
+    #[test]
+    fn opaque_origin_entry_matches_nothing() {
+        let list = allowed(&["tauri://localhost"]);
+        let err = validate_origin_allowed(&url("evil://x"), &list).unwrap_err();
+        assert_eq!(err.kind(), "validation");
     }
 }
