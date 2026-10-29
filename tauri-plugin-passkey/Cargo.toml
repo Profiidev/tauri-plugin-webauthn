@@ -2,7 +2,7 @@
 name = "tauri-plugin-passkey"
 version = "0.2.0"
 authors = ["Don Kackman"]
-description = "a Tauri plugin for WebAuthn"
+description = "Tauri plugin for WebAuthn / passkey (FIDO2) authentication on macOS, iOS, Windows, Android, and Linux."
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/dkackman/tauri-plugin-passkey"
 homepage = "https://github.com/dkackman/tauri-plugin-passkey"
@@ -37,7 +37,7 @@ thiserror = "2"
 webauthn-rs-proto = "~0.5"
 log = { version = "0.4.27", optional = true }
 serde_json = "1.0.140"
-tokio = { version = "1.45.0", features = ["sync"] }
+tokio = { version = "1.45.0", features = ["sync", "rt", "rt-multi-thread"] }
 base64urlsafedata = "0.5.1"
 base64 = "0.23.0"
 sha2 = "0.10"
@@ -46,7 +46,7 @@ sha2 = "0.10"
 tauri-plugin = { version = "2.2.0", features = ["build"] }
 
 [target.'cfg(target_os = "macos")'.build-dependencies]
-swift-rs = { version = "1.0.5", features = ["build"] }
+swift-rs = { version = "1.0.9", features = ["build"] }
 
 [features]
 default = ["log"]

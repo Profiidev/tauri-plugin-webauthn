@@ -5,6 +5,7 @@ use tauri::{
 };
 
 mod authenticators;
+mod base64url;
 mod commands;
 mod error;
 mod normalize;

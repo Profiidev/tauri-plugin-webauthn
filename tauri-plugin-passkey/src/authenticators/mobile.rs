@@ -1,7 +1,10 @@
 use base64urlsafedata::Base64UrlSafeData;
 use serde::de::DeserializeOwned;
 use tauri::{
-    plugin::{PluginApi, PluginHandle},
+    plugin::{
+        mobile::{ErrorResponse, PluginInvokeError},
+        PluginApi, PluginHandle,
+    },
     AppHandle, Runtime, Url,
 };
 use webauthn_rs_proto::{
@@ -53,7 +56,8 @@ impl<R: Runtime> Authenticator<R> for Webauthn<R> {
 
         let v: serde_json::Value = self
             .0
-            .run_mobile_plugin("register", serde_json::to_string(&options)?)?;
+            .run_mobile_plugin("register", serde_json::to_string(&options)?)
+            .map_err(map_invoke_error)?;
 
         Ok((
             parse_registration_response(&v)?,
@@ -75,7 +79,8 @@ impl<R: Runtime> Authenticator<R> for Webauthn<R> {
 
         let v: serde_json::Value = self
             .0
-            .run_mobile_plugin("authenticate", serde_json::to_string(&options)?)?;
+            .run_mobile_plugin("authenticate", serde_json::to_string(&options)?)
+            .map_err(map_invoke_error)?;
 
         Ok((
             parse_authentication_response(&v)?,
@@ -84,8 +89,28 @@ impl<R: Runtime> Authenticator<R> for Webauthn<R> {
     }
 
     fn cancel(&self) {
-        let _: Result<serde_json::Value, _> = self.0.run_mobile_plugin("cancel", ());
+        let result: Result<serde_json::Value, _> = self
+            .0
+            .run_mobile_plugin("cancel", ())
+            .map_err(map_invoke_error);
+        if let Err(_e) = result {
+            #[cfg(feature = "log")]
+            log::debug!("cancel was not acknowledged by the native plugin: {_e}");
+        }
     }
+}
+
+/// Translate a native plugin rejection into a structured error. The Swift and
+/// Kotlin bridges reject with a machine-readable `code`; known codes become
+/// their matching [`crate::Error`] kind, anything else stays `PluginInvoke`.
+pub(crate) fn map_invoke_error(e: PluginInvokeError) -> crate::Error {
+    if let PluginInvokeError::InvokeRejected(ErrorResponse { code, message, .. }) = &e {
+        let message = message.clone().unwrap_or_else(|| e.to_string());
+        if let Some(mapped) = crate::error::error_from_code(code.as_deref(), &message) {
+            return mapped;
+        }
+    }
+    crate::Error::PluginInvoke(e)
 }
 
 fn json_str(v: &serde_json::Value, key: &str) -> crate::Result<String> {
@@ -98,9 +123,11 @@ fn json_str(v: &serde_json::Value, key: &str) -> crate::Result<String> {
 }
 
 fn json_bytes(v: &serde_json::Value, key: &str) -> crate::Result<Vec<u8>> {
-    base64_url_decode(v[key].as_str().ok_or(crate::Error::Authenticator(format!(
+    let encoded = v[key].as_str().ok_or(crate::Error::Authenticator(format!(
         "Missing JSON field: {key}"
-    )))?)
+    )))?;
+    crate::base64url::decode(encoded)
+        .map_err(|e| crate::Error::Io(std::io::Error::new(std::io::ErrorKind::InvalidData, e)))
 }
 
 fn parse_registration_response(
@@ -136,7 +163,7 @@ fn parse_authentication_response(v: &serde_json::Value) -> crate::Result<PublicK
     let signature = json_bytes(response, "signature")?;
     let user_handle = response["userHandle"]
         .as_str()
-        .and_then(|s| base64_url_decode(s).ok());
+        .and_then(|s| crate::base64url::decode(s).ok());
 
     Ok(PublicKeyCredential {
         id,
@@ -152,10 +179,55 @@ fn parse_authentication_response(v: &serde_json::Value) -> crate::Result<PublicK
     })
 }
 
-fn base64_url_decode(input: &str) -> crate::Result<Vec<u8>> {
-    use base64::engine::general_purpose::URL_SAFE_NO_PAD;
-    use base64::Engine;
-    URL_SAFE_NO_PAD
-        .decode(input)
-        .map_err(|e| crate::Error::Io(std::io::Error::new(std::io::ErrorKind::InvalidData, e)))
+#[cfg(all(test, mobile))]
+mod tests {
+    use super::*;
+
+    fn rejected(code: Option<&str>) -> PluginInvokeError {
+        PluginInvokeError::InvokeRejected(ErrorResponse {
+            code: code.map(Into::into),
+            message: Some("x".into()),
+            data: (),
+        })
+    }
+
+    #[test]
+    fn cancelled_code_maps_to_cancelled() {
+        assert!(matches!(
+            map_invoke_error(rejected(Some("cancelled"))),
+            crate::Error::Cancelled
+        ));
+    }
+
+    #[test]
+    fn unsupported_code_maps_to_unsupported() {
+        assert!(matches!(
+            map_invoke_error(rejected(Some("unsupported"))),
+            crate::Error::Unsupported(m) if m == "x"
+        ));
+    }
+
+    #[test]
+    fn timeout_code_maps_to_authenticator() {
+        assert!(matches!(
+            map_invoke_error(rejected(Some("timeout"))),
+            crate::Error::Authenticator(m) if m == "x"
+        ));
+    }
+
+    #[test]
+    fn unknown_or_missing_code_stays_plugin_invoke() {
+        assert!(matches!(
+            map_invoke_error(rejected(Some("other"))),
+            crate::Error::PluginInvoke(_)
+        ));
+        assert!(matches!(
+            map_invoke_error(rejected(None)),
+            crate::Error::PluginInvoke(_)
+        ));
+        assert!(matches!(
+            map_invoke_error(PluginInvokeError::UnreachableWebview),
+            crate::Error::PluginInvoke(_)
+        ));
+    }
 }

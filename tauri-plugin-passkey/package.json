@@ -39,7 +39,7 @@
     "verify:package": "node scripts/verify-package.mjs",
     "prepublishOnly": "pnpm build && pnpm verify:package",
     "pretest": "pnpm build",
-    "test": "pnpm test:js && pnpm test:rust && (pnpm test:swift || echo '⚠️  Swift tests skipped (require iOS simulator)') && pnpm test:android",
+    "test": "pnpm test:js && pnpm test:rust && pnpm test:swift:macos && pnpm test:android",
     "test:js": "vitest run",
     "test:js:watch": "vitest",
     "test:rust": "cargo test",

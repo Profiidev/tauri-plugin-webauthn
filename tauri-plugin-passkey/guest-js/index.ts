@@ -76,7 +76,6 @@ export type PasskeyErrorKind =
   | "io"
   | "platform"
   | "serialization"
-  | "noToken"
   | "validation"
   | "authenticator"
   // Raised for a request the platform cannot fulfill by design, not by
@@ -85,6 +84,10 @@ export type PasskeyErrorKind =
   // `residentKey: "discouraged"` on Android (Credential Manager only
   // creates discoverable credentials).
   | "unsupported"
+  // The user dismissed the native sheet, or `cancel()` was called.
+  | "cancelled"
+  // Another passkey ceremony is already in flight.
+  | "busy"
   | (string & {});
 
 /**

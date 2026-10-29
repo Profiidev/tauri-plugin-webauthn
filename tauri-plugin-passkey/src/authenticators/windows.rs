@@ -2,7 +2,7 @@ use std::{fmt::Debug, marker::PhantomData};
 
 use serde::de::DeserializeOwned;
 use tauri::{plugin::PluginApi, AppHandle, Runtime, Url};
-use webauthn_authenticator_rs::{win10::Win10, AuthenticatorBackend};
+use webauthn_authenticator_rs::{error::WebauthnCError, win10::Win10, AuthenticatorBackend};
 use webauthn_rs_proto::{
     PublicKeyCredential, PublicKeyCredentialCreationOptions, PublicKeyCredentialRequestOptions,
     RegisterPublicKeyCredential,
@@ -13,6 +13,15 @@ use crate::prf::{
 };
 
 use super::Authenticator;
+
+/// A ceremony reported as cancelled surfaces as the dedicated `cancelled`
+/// kind; every other failure keeps its `platform` kind.
+fn map_webauthn_error(e: WebauthnCError) -> crate::Error {
+    match e {
+        WebauthnCError::Cancelled => crate::Error::Cancelled,
+        e => crate::Error::WebAuthn(e),
+    }
+}
 
 /// Windows' WebAuthn API exposes no PRF/hmac-secret support. `commands.rs`
 /// already turns "PRF requested, no backend output" into
@@ -63,7 +72,7 @@ impl<R: Runtime> Authenticator<R> for Webauthn<R> {
             .map_err(|e| {
                 #[cfg(feature = "log")]
                 log::error!("Failed to register: {:?}", e);
-                crate::Error::WebAuthn(e)
+                map_webauthn_error(e)
             })?;
         Ok((credential, None))
     }
@@ -81,7 +90,7 @@ impl<R: Runtime> Authenticator<R> for Webauthn<R> {
         let credential = auth.perform_auth(origin, options, timeout).map_err(|e| {
             #[cfg(feature = "log")]
             log::error!("Failed to authenticate: {:?}", e);
-            crate::Error::WebAuthn(e)
+            map_webauthn_error(e)
         })?;
         Ok((credential, None))
     }
@@ -90,6 +99,22 @@ impl<R: Runtime> Authenticator<R> for Webauthn<R> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn cancelled_maps_to_cancelled() {
+        assert!(matches!(
+            map_webauthn_error(WebauthnCError::Cancelled),
+            crate::Error::Cancelled
+        ));
+    }
+
+    #[test]
+    fn other_webauthn_errors_keep_the_platform_kind() {
+        assert_eq!(
+            map_webauthn_error(WebauthnCError::Internal).kind(),
+            "platform"
+        );
+    }
 
     #[test]
     fn authentication_with_salts_is_rejected() {

@@ -183,8 +183,8 @@ describe("isPasskeyError", () => {
   it("accepts a tagged error object", () => {
     expect(
       isPasskeyError({
-        kind: "validation",
-        message: "Validation error: bad rp_id",
+        kind: "cancelled",
+        message: "Operation cancelled by the user",
       })
     ).toBe(true);
   });

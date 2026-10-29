@@ -10,7 +10,6 @@
 //! apply the spec's derivation themselves. A backend speaking raw CTAP2 must call
 //! [`ctap_salt`] first.
 
-use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
 use serde_json::{json, Map, Value};
 use sha2::{Digest, Sha256};
 
@@ -71,7 +70,7 @@ fn decode_salt(value: &Value, field: &str) -> crate::Result<Vec<u8>> {
     let encoded = value.as_str().ok_or_else(|| {
         crate::Error::Validation(format!("prf.eval.{field} must be a base64url string"))
     })?;
-    URL_SAFE_NO_PAD.decode(encoded).map_err(|e| {
+    crate::base64url::decode(encoded).map_err(|e| {
         crate::Error::Validation(format!("prf.eval.{field} is not valid base64url: {e}"))
     })
 }
@@ -140,9 +139,9 @@ pub fn set_registration_prf_input(options: &mut Value) {
 #[cfg_attr(not(mobile), allow(dead_code))]
 pub fn set_authentication_prf_input(options: &mut Value, prf: &PrfAuthenticationInput) {
     let mut eval = Map::new();
-    eval.insert("first".into(), json!(URL_SAFE_NO_PAD.encode(&prf.first)));
+    eval.insert("first".into(), json!(crate::base64url::encode(&prf.first)));
     if let Some(second) = &prf.second {
-        eval.insert("second".into(), json!(URL_SAFE_NO_PAD.encode(second)));
+        eval.insert("second".into(), json!(crate::base64url::encode(second)));
     }
     if let Some(extensions) = extensions_mut(options) {
         extensions.insert("prf".into(), json!({ "eval": Value::Object(eval) }));
@@ -188,9 +187,9 @@ pub fn set_registration_prf(response: &mut Value, prf: Option<PrfRegistrationOut
 pub fn set_authentication_prf(response: &mut Value, prf: Option<PrfAuthenticationOutput>) {
     let prf = prf.map(|p| {
         let mut results = Map::new();
-        results.insert("first".into(), json!(URL_SAFE_NO_PAD.encode(&p.first)));
+        results.insert("first".into(), json!(crate::base64url::encode(&p.first)));
         if let Some(second) = &p.second {
-            results.insert("second".into(), json!(URL_SAFE_NO_PAD.encode(second)));
+            results.insert("second".into(), json!(crate::base64url::encode(second)));
         }
         json!({ "results": Value::Object(results) })
     });
@@ -270,7 +269,7 @@ pub fn authentication_output_from_bridge(
         let Some(s) = prf.get(key).and_then(Value::as_str) else {
             return Ok(None);
         };
-        URL_SAFE_NO_PAD.decode(s).map(Some).map_err(|e| {
+        crate::base64url::decode(s).map(Some).map_err(|e| {
             crate::Error::Authenticator(format!("bridge prf.{key} is not valid base64url: {e}"))
         })
     };
@@ -354,6 +353,15 @@ mod tests {
             .unwrap();
         assert_eq!(input.first, b"x");
         assert!(input.second.is_none());
+    }
+
+    #[test]
+    fn authentication_input_accepts_padded_salts() {
+        let options = json!({ "extensions": { "prf": { "eval": { "first": "c2FsdDE=" } } } });
+        let input = authentication_input_from_options(&options)
+            .unwrap()
+            .unwrap();
+        assert_eq!(input.first, b"salt1");
     }
 
     #[test]

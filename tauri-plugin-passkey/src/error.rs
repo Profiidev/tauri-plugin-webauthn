@@ -14,8 +14,10 @@ pub enum Error {
     WebAuthn(webauthn_authenticator_rs::error::WebauthnCError),
     #[error(transparent)]
     SerdeJson(#[from] serde_json::Error),
-    #[error("No token found")]
-    NoToken,
+    #[error("Operation cancelled by the user")]
+    Cancelled,
+    #[error("Another passkey operation is already in progress")]
+    Busy,
     #[error("Validation error: {0}")]
     Validation(String),
     #[error("Authenticator error: {0}")]
@@ -51,7 +53,8 @@ impl Error {
             #[cfg(all(desktop, windows))]
             Error::WebAuthn(_) => "platform",
             Error::SerdeJson(_) => "serialization",
-            Error::NoToken => "noToken",
+            Error::Cancelled => "cancelled",
+            Error::Busy => "busy",
             Error::Validation(_) => "validation",
             Error::Authenticator(_) => "authenticator",
             Error::Unsupported(_) => "unsupported",
@@ -70,6 +73,27 @@ impl Error {
             )))]
             Error::Cbor2(_) => "serialization",
         }
+    }
+}
+
+/// Map a native bridge error code to a structured [`Error`].
+///
+/// The Swift and Kotlin bridges reject with a `code` string alongside a
+/// human-readable message. Known codes become their matching kinds; `None` means
+/// the code is absent or unknown and the caller keeps its existing fallback.
+///
+/// Only the macOS/iOS/Android bridges report codes, so other targets would
+/// otherwise see this as dead code.
+#[cfg_attr(
+    not(any(target_os = "macos", target_os = "ios", target_os = "android")),
+    allow(dead_code)
+)]
+pub(crate) fn error_from_code(code: Option<&str>, message: &str) -> Option<Error> {
+    match code? {
+        "cancelled" => Some(Error::Cancelled),
+        "unsupported" => Some(Error::Unsupported(message.to_string())),
+        "timeout" => Some(Error::Authenticator(message.to_string())),
+        _ => None,
     }
 }
 
@@ -110,10 +134,52 @@ mod tests {
     }
 
     #[test]
-    fn unit_variant_kind_and_message() {
-        let value: serde_json::Value = serde_json::to_value(Error::NoToken).unwrap();
-        assert_eq!(value["kind"], "noToken");
-        assert_eq!(value["message"], "No token found");
+    fn cancelled_kind() {
+        let value: serde_json::Value = serde_json::to_value(Error::Cancelled).unwrap();
+        assert_eq!(Error::Cancelled.kind(), "cancelled");
+        assert_eq!(value["kind"], "cancelled");
+        assert_eq!(value["message"], "Operation cancelled by the user");
+    }
+
+    #[test]
+    fn busy_kind() {
+        let value: serde_json::Value = serde_json::to_value(Error::Busy).unwrap();
+        assert_eq!(Error::Busy.kind(), "busy");
+        assert_eq!(value["kind"], "busy");
+        assert_eq!(
+            value["message"],
+            "Another passkey operation is already in progress"
+        );
+    }
+
+    #[test]
+    fn code_cancelled_maps_to_cancelled() {
+        assert!(matches!(
+            error_from_code(Some("cancelled"), "x"),
+            Some(Error::Cancelled)
+        ));
+    }
+
+    #[test]
+    fn code_unsupported_maps_to_unsupported_with_message() {
+        assert!(matches!(
+            error_from_code(Some("unsupported"), "x"),
+            Some(Error::Unsupported(m)) if m == "x"
+        ));
+    }
+
+    #[test]
+    fn code_timeout_maps_to_authenticator_with_message() {
+        assert!(matches!(
+            error_from_code(Some("timeout"), "x"),
+            Some(Error::Authenticator(m)) if m == "x"
+        ));
+    }
+
+    #[test]
+    fn missing_or_unknown_code_maps_to_none() {
+        assert!(error_from_code(None, "x").is_none());
+        assert!(error_from_code(Some("somethingElse"), "x").is_none());
     }
 
     #[test]

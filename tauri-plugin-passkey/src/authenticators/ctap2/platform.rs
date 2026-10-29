@@ -15,6 +15,7 @@ use authenticator::{
         PublicKeyCredentialParameters, PublicKeyCredentialUserEntity, RelyingParty,
         ResidentKeyRequirement, Transport, UserVerificationRequirement,
     },
+    errors::AuthenticatorError,
     statecallback::StateCallback,
     Pin, StatusPinUv, StatusUpdate,
 };
@@ -36,6 +37,15 @@ use crate::prf::{
 };
 
 use super::EVENT_NAME;
+
+/// A ceremony the user (or `cancel()`) aborted surfaces as the dedicated
+/// `cancelled` kind; every other CTAP2 failure keeps its `authenticator` kind.
+fn map_ctap2_error(e: AuthenticatorError) -> crate::Error {
+    match e {
+        AuthenticatorError::CancelledByUser => crate::Error::Cancelled,
+        e => crate::Error::Ctap2(e),
+    }
+}
 
 pub fn init_manager() -> crate::Result<AuthenticatorService> {
     let mut manager = AuthenticatorService::new()?;
@@ -109,9 +119,12 @@ pub fn perform_register(
         .unwrap()
         .register(timeout, args, status_tx, callback)?;
 
-    let result = register_rx.recv().map_err(|_| {
-        crate::Error::Authenticator("Registration ended without a result".to_string())
-    })??;
+    let result = register_rx
+        .recv()
+        .map_err(|_| {
+            crate::Error::Authenticator("Registration ended without a result".to_string())
+        })?
+        .map_err(map_ctap2_error)?;
 
     #[cfg(feature = "log")]
     log::debug!("Register succeeded");
@@ -203,9 +216,12 @@ pub fn perform_authentication(
         .unwrap()
         .sign(timeout, args, status_tx, callback)?;
 
-    let result = sign_rx.recv().map_err(|_| {
-        crate::Error::Authenticator("Authentication ended without a result".to_string())
-    })??;
+    let result = sign_rx
+        .recv()
+        .map_err(|_| {
+            crate::Error::Authenticator("Authentication ended without a result".to_string())
+        })?
+        .map_err(map_ctap2_error)?;
 
     // The sign result contains the PRF outputs — do not log it.
     #[cfg(feature = "log")]
@@ -471,6 +487,20 @@ fn convert_resident_key(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn cancelled_by_user_maps_to_cancelled() {
+        assert!(matches!(
+            map_ctap2_error(AuthenticatorError::CancelledByUser),
+            crate::Error::Cancelled
+        ));
+    }
+
+    #[test]
+    fn other_ctap2_errors_keep_the_authenticator_kind() {
+        let err = map_ctap2_error(AuthenticatorError::CredentialExcluded);
+        assert_eq!(err.kind(), "authenticator");
+    }
 
     fn selection(
         resident_key: Option<webauthn_rs_proto::ResidentKeyRequirement>,
