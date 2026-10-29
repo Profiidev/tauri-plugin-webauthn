@@ -42,7 +42,7 @@ describe("register", () => {
     const result = await register("https://example.com", options);
 
     expect(invoke).toHaveBeenCalledTimes(1);
-    expect(invoke).toHaveBeenCalledWith("plugin:dkackman-passkey|register", {
+    expect(invoke).toHaveBeenCalledWith("plugin:passkey|register", {
       origin: "https://example.com",
       options,
     });
@@ -61,13 +61,10 @@ describe("authenticate", () => {
     const result = await authenticate("https://example.com", options);
 
     expect(invoke).toHaveBeenCalledTimes(1);
-    expect(invoke).toHaveBeenCalledWith(
-      "plugin:dkackman-passkey|authenticate",
-      {
-        origin: "https://example.com",
-        options,
-      }
-    );
+    expect(invoke).toHaveBeenCalledWith("plugin:passkey|authenticate", {
+      origin: "https://example.com",
+      options,
+    });
     expect(result).toBe(expected);
   });
 });
@@ -80,7 +77,7 @@ describe("timeout option", () => {
 
     await register("https://example.com", options, 30_000);
 
-    expect(invoke).toHaveBeenCalledWith("plugin:dkackman-passkey|register", {
+    expect(invoke).toHaveBeenCalledWith("plugin:passkey|register", {
       origin: "https://example.com",
       options,
       timeout: 30_000,
@@ -94,14 +91,11 @@ describe("timeout option", () => {
 
     await authenticate("https://example.com", options);
 
-    expect(invoke).toHaveBeenCalledWith(
-      "plugin:dkackman-passkey|authenticate",
-      {
-        origin: "https://example.com",
-        options,
-        timeout: undefined,
-      }
-    );
+    expect(invoke).toHaveBeenCalledWith("plugin:passkey|authenticate", {
+      origin: "https://example.com",
+      options,
+      timeout: undefined,
+    });
   });
 });
 
@@ -109,7 +103,7 @@ describe("sendPin", () => {
   it("invokes send_pin with the pin payload", async () => {
     await sendPin("1234");
 
-    expect(invoke).toHaveBeenCalledWith("plugin:dkackman-passkey|send_pin", {
+    expect(invoke).toHaveBeenCalledWith("plugin:passkey|send_pin", {
       pin: "1234",
     });
   });
@@ -121,7 +115,7 @@ describe("selectKey", () => {
 
     // Regression guard: the JS parameter is `index` but the backend expects
     // the payload field to be named `key`.
-    expect(invoke).toHaveBeenCalledWith("plugin:dkackman-passkey|select_key", {
+    expect(invoke).toHaveBeenCalledWith("plugin:passkey|select_key", {
       key: 2,
     });
   });
@@ -131,7 +125,7 @@ describe("cancel", () => {
   it("invokes cancel with no payload argument", async () => {
     await cancel();
 
-    expect(invoke).toHaveBeenCalledWith("plugin:dkackman-passkey|cancel");
+    expect(invoke).toHaveBeenCalledWith("plugin:passkey|cancel");
     // Regression guard: cancel must not send a second (payload) argument.
     expect(invoke.mock.calls[0]).toHaveLength(1);
   });

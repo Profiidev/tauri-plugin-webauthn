@@ -4072,28 +4072,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tauri-plugin-dkackman-passkey"
-version = "0.2.0"
-dependencies = [
- "authenticator",
- "base64 0.23.0",
- "base64urlsafedata",
- "log",
- "openssl",
- "serde",
- "serde_cbor_2",
- "serde_json",
- "sha2",
- "swift-rs",
- "tauri",
- "tauri-plugin",
- "thiserror 2.0.19",
- "tokio",
- "webauthn-authenticator-rs",
- "webauthn-rs-proto",
-]
-
-[[package]]
 name = "tauri-plugin-log"
 version = "2.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4134,6 +4112,28 @@ dependencies = [
  "url",
  "windows 0.61.3",
  "zbus",
+]
+
+[[package]]
+name = "tauri-plugin-passkey"
+version = "0.2.0"
+dependencies = [
+ "authenticator",
+ "base64 0.23.0",
+ "base64urlsafedata",
+ "log",
+ "openssl",
+ "serde",
+ "serde_cbor_2",
+ "serde_json",
+ "sha2",
+ "swift-rs",
+ "tauri",
+ "tauri-plugin",
+ "thiserror 2.0.19",
+ "tokio",
+ "webauthn-authenticator-rs",
+ "webauthn-rs-proto",
 ]
 
 [[package]]
@@ -4946,9 +4946,9 @@ dependencies = [
  "serde_json",
  "tauri",
  "tauri-build",
- "tauri-plugin-dkackman-passkey",
  "tauri-plugin-log",
  "tauri-plugin-opener",
+ "tauri-plugin-passkey",
  "tracing",
  "webauthn-rs",
  "webauthn-rs-proto",

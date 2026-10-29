@@ -1,5 +1,5 @@
 {
-  "name": "@dkackman/tauri-plugin-passkey-api",
+  "name": "tauri-plugin-passkey-api",
   "version": "0.2.0",
   "author": "Don Kackman",
   "description": "Tauri plugin for WebAuthn / passkey (FIDO2) authentication on macOS/iOS, Windows, Android, and Linux.",

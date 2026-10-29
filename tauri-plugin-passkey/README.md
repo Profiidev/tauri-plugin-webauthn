@@ -4,8 +4,6 @@ WebAuthn / FIDO2 / passkey authentication for Tauri 2 apps on **macOS, iOS, Andr
 
 The plugin talks to each platform's native passkey API (ASAuthorization on Apple platforms, Credential Manager on Android, Windows WebAuthn API, direct CTAP2 over USB on Linux) and exposes one JS API that consumes standard WebAuthn JSON options — the same shapes your relying-party server library (e.g. `webauthn-rs`, `@simplewebauthn/server`) already produces.
 
-This is a maintained fork, published under the `dkackman` namespace as the crate `tauri-plugin-dkackman-passkey` and the npm package `@dkackman/tauri-plugin-passkey-api`. See [Acknowledgments](#acknowledgments) for its upstream.
-
 ## Platform support
 
 | Capability                          | Linux                     | macOS 14+       | iOS 17.4+       | Android 9+      | Windows 10 1903+     |
@@ -27,8 +25,8 @@ On everything except Linux, the operating system shows its own passkey UI (Touch
 ## Install
 
 ```bash
-cargo add tauri-plugin-dkackman-passkey            # in src-tauri/
-pnpm add @dkackman/tauri-plugin-passkey-api        # in your frontend
+cargo add tauri-plugin-passkey       # in src-tauri/
+pnpm add tauri-plugin-passkey-api    # in your frontend
 ```
 
 `@tauri-apps/api` (>= 2.0.0) is a peer dependency of the npm package.
@@ -37,17 +35,17 @@ Register the plugin in `src-tauri/src/lib.rs`:
 
 ```rust
 tauri::Builder::default()
-    .plugin(tauri_plugin_dkackman_passkey::init())
+    .plugin(tauri_plugin_passkey::init())
     // ...
 ```
 
-`init()` returns `TauriPlugin<R, Option<Config>>`; `.plugin(init())` needs no type annotations. `Config` is re-exported as `tauri_plugin_dkackman_passkey::Config`.
+`init()` returns `TauriPlugin<R, Option<Config>>`; `.plugin(init())` needs no type annotations. `Config` is re-exported as `tauri_plugin_passkey::Config`.
 
 Grant the permission in `src-tauri/capabilities/default.json`:
 
 ```json
 {
-  "permissions": ["dkackman-passkey:default"]
+  "permissions": ["passkey:default"]
 }
 ```
 
@@ -73,14 +71,14 @@ Pin the origin your app is allowed to claim in `tauri.conf.json`:
 ```json
 {
   "plugins": {
-    "dkackman-passkey": {
+    "passkey": {
       "allowedOrigins": ["https://example.com"]
     }
   }
 }
 ```
 
-When the list is non-empty, `register` and `authenticate` reject any origin not in it with kind `validation`, on every platform, before the rpId check. Each entry is parsed as a URL and reduced to its origin (`scheme://host[:port]`), so paths and trailing slashes are ignored, but scheme and port must match exactly. Only `http(s)` origins are meaningful: entries that do not parse, or that have an opaque origin (`tauri://localhost` or any other non-http(s) scheme), match nothing. A non-empty list with no usable `http(s)` entry therefore rejects every origin (fail closed) — the plugin logs a warning at startup when that happens. An empty list — or no `plugins.dkackman-passkey` entry at all — disables the check.
+When the list is non-empty, `register` and `authenticate` reject any origin not in it with kind `validation`, on every platform, before the rpId check. Each entry is parsed as a URL and reduced to its origin (`scheme://host[:port]`), so paths and trailing slashes are ignored, but scheme and port must match exactly. Only `http(s)` origins are meaningful: entries that do not parse, or that have an opaque origin (`tauri://localhost` or any other non-http(s) scheme), match nothing. A non-empty list with no usable `http(s)` entry therefore rejects every origin (fail closed) — the plugin logs a warning at startup when that happens. An empty list — or no `plugins.passkey` entry at all — disables the check.
 
 The [example app](#example-app) sets `allowedOrigins: []` on purpose, because its relying-party origin is editable in its UI. A real app should list its origin(s), and on Linux and Windows this is the only thing that stops a compromised webview from claiming another site's origin.
 
@@ -91,7 +89,7 @@ import {
   register,
   authenticate,
   isPasskeyError,
-} from "@dkackman/tauri-plugin-passkey-api";
+} from "tauri-plugin-passkey-api";
 
 // `creationOptions` / `requestOptions` come from your RP server and are
 // standard WebAuthn JSON (PublicKeyCredentialCreationOptionsJSON etc.).
@@ -194,7 +192,7 @@ import {
   sendPin,
   selectKey,
   PasskeyEventType,
-} from "@dkackman/tauri-plugin-passkey-api";
+} from "tauri-plugin-passkey-api";
 
 const unlisten = await registerListener((event) => {
   switch (event.type) {
@@ -216,7 +214,7 @@ A complete relying-party + frontend example (including PRF, discoverable and non
 
 ## Acknowledgments
 
-This is a maintained fork, published under the `dkackman` namespace. It is a derivative of
+This project is a derivative of
 [`tauri-plugin-webauthn`](https://github.com/Profiidev/tauri-plugin-webauthn)
 by [ProfiiDev](https://github.com/Profiidev), itself originally forked from
 [fendent/tauri-plugin-webauthn](https://github.com/fendent/tauri-plugin-webauthn). See the

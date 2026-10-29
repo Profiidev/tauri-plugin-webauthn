@@ -14,7 +14,7 @@
     sendPin,
     PinEventType,
     selectKey,
-  } from "@dkackman/tauri-plugin-passkey-api";
+  } from "tauri-plugin-passkey-api";
 
   type LogEntry = {
     time: string;

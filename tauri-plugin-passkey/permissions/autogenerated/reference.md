@@ -22,7 +22,7 @@ Default permissions for the plugin
 <tr>
 <td>
 
-`dkackman-passkey:allow-authenticate`
+`passkey:allow-authenticate`
 
 </td>
 <td>
@@ -35,7 +35,7 @@ Enables the authenticate command without any pre-configured scope.
 <tr>
 <td>
 
-`dkackman-passkey:deny-authenticate`
+`passkey:deny-authenticate`
 
 </td>
 <td>
@@ -48,7 +48,7 @@ Denies the authenticate command without any pre-configured scope.
 <tr>
 <td>
 
-`dkackman-passkey:allow-cancel`
+`passkey:allow-cancel`
 
 </td>
 <td>
@@ -61,7 +61,7 @@ Enables the cancel command without any pre-configured scope.
 <tr>
 <td>
 
-`dkackman-passkey:deny-cancel`
+`passkey:deny-cancel`
 
 </td>
 <td>
@@ -74,7 +74,7 @@ Denies the cancel command without any pre-configured scope.
 <tr>
 <td>
 
-`dkackman-passkey:allow-register`
+`passkey:allow-register`
 
 </td>
 <td>
@@ -87,7 +87,7 @@ Enables the register command without any pre-configured scope.
 <tr>
 <td>
 
-`dkackman-passkey:deny-register`
+`passkey:deny-register`
 
 </td>
 <td>
@@ -100,7 +100,7 @@ Denies the register command without any pre-configured scope.
 <tr>
 <td>
 
-`dkackman-passkey:allow-select-key`
+`passkey:allow-select-key`
 
 </td>
 <td>
@@ -113,7 +113,7 @@ Enables the select_key command without any pre-configured scope.
 <tr>
 <td>
 
-`dkackman-passkey:deny-select-key`
+`passkey:deny-select-key`
 
 </td>
 <td>
@@ -126,7 +126,7 @@ Denies the select_key command without any pre-configured scope.
 <tr>
 <td>
 
-`dkackman-passkey:allow-send-pin`
+`passkey:allow-send-pin`
 
 </td>
 <td>
@@ -139,7 +139,7 @@ Enables the send_pin command without any pre-configured scope.
 <tr>
 <td>
 
-`dkackman-passkey:deny-send-pin`
+`passkey:deny-send-pin`
 
 </td>
 <td>

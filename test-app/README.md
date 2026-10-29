@@ -1,6 +1,6 @@
 # WebAuthn Example App
 
-A Tauri + SvelteKit example demonstrating the `tauri-plugin-dkackman-passkey` plugin across
+A Tauri + SvelteKit example demonstrating the `tauri-plugin-passkey` plugin across
 macOS, iOS, Android, Windows, and Linux. The PIN-entry and key-selection UI only
 activates on Linux; other platforms use native OS dialogs for those steps.
 
@@ -194,7 +194,7 @@ pnpm tauri ios dev --open
 
 ## Notes
 
-- `src-tauri/tauri.conf.json` sets `plugins.dkackman-passkey.allowedOrigins` to `[]`
+- `src-tauri/tauri.conf.json` sets `plugins.passkey.allowedOrigins` to `[]`
   on purpose: the relying-party origin is editable in the UI, so pinning it would
   break the example. A real app should list its origin(s) — see the plugin README's
   [Security model](../tauri-plugin-passkey/README.md#security-model).

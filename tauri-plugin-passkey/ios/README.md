@@ -6,7 +6,7 @@ Native passkey registration and authentication on iOS using Apple's [ASAuthoriza
 
 ```
 Tauri App (Rust)
-  └─ tauri-plugin-dkackman-passkey
+  └─ tauri-plugin-passkey
        └─ mobile.rs (run_mobile_plugin calls)
             └─ WebauthnPlugin (Swift, Tauri Plugin)
                  ├─ WebauthnPlugin.swift - Plugin entry point, JSON parsing, response serialization
@@ -16,7 +16,7 @@ Tauri App (Rust)
 
 The Rust side calls `run_mobile_plugin("register", ...)` / `run_mobile_plugin("authenticate", ...)` with JSON-serialized WebAuthn options, `extensions.prf`, and a top-level `timeout` in milliseconds. The Swift plugin decodes the JSON, runs the ASAuthorization flow on the main thread, serializes the credential response back to JSON, and resolves the Tauri invoke. Failures reject with a machine-readable code (`cancelled`, `timeout`, `unsupported`) that Rust maps to the plugin's error kinds (`timeout` becomes `authenticator`). The Rust side deserializes a successful response into `webauthn-rs-proto` types.
 
-Unlike the macOS bridge (which uses C-callable FFI via `swift-rs`), the iOS bridge uses Tauri's native mobile plugin system. The Swift code extends Tauri's `Plugin` class and is registered via the `@_cdecl("init_plugin_passkey")` entry point (a native name that predates the `dkackman-passkey` plugin id and is unchanged).
+Unlike the macOS bridge (which uses C-callable FFI via `swift-rs`), the iOS bridge uses Tauri's native mobile plugin system. The Swift code extends Tauri's `Plugin` class and is registered via the `@_cdecl("init_plugin_passkey")` entry point (a native name that matches the `passkey` plugin id).
 
 ## Consuming App Setup
 
@@ -28,7 +28,7 @@ In your app's `src-tauri/Cargo.toml`:
 
 ```toml
 [dependencies]
-tauri-plugin-dkackman-passkey = "0.3"
+tauri-plugin-passkey = "0.3"
 ```
 
 ### 2. Register the plugin
@@ -37,7 +37,7 @@ In your app's `src-tauri/src/lib.rs`:
 
 ```rust
 tauri::Builder::default()
-    .plugin(tauri_plugin_dkackman_passkey::init())
+    .plugin(tauri_plugin_passkey::init())
     // ...
 ```
 
@@ -47,7 +47,7 @@ In `src-tauri/capabilities/default.json`, add the plugin's permission:
 
 ```json
 {
-  "permissions": ["dkackman-passkey:default"]
+  "permissions": ["passkey:default"]
 }
 ```
 

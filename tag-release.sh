@@ -8,7 +8,7 @@ set -euo pipefail
 # release workflow would otherwise fail on after the tag already exists.
 
 PKG_DIR="tauri-plugin-passkey"
-NPM_PKG="@dkackman/tauri-plugin-passkey-api"
+NPM_PKG="tauri-plugin-passkey-api"
 
 if [ $# -ne 1 ]; then
     echo "Usage: $0 <tag>"

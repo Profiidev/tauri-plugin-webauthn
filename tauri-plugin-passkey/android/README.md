@@ -2,7 +2,7 @@
 
 Native passkey registration and authentication on Android using [Credential Manager](https://developer.android.com/identity/sign-in/credential-manager). This is a Tauri mobile plugin (`net.kackman.webauthn.WebauthnPlugin`) that wraps `androidx.credentials.CredentialManager` and exposes it to the Rust plugin via Tauri's mobile plugin system.
 
-The Kotlin package and class names predate the `dkackman-passkey` plugin id and are unchanged; install and permission setup are the same as on every platform — see the [plugin README](../README.md#install).
+The Kotlin package and class names (`net.kackman.webauthn` / `WebauthnPlugin`) predate the `passkey` plugin id and are unchanged; install and permission setup are the same as on every platform — see the [plugin README](../README.md#install).
 
 ## Requirements
 

@@ -1,4 +1,4 @@
-//! Plugin configuration, read from `plugins.dkackman-passkey` in the app's
+//! Plugin configuration, read from `plugins.passkey` in the app's
 //! `tauri.conf.json`.
 
 use serde::Deserialize;
@@ -41,7 +41,7 @@ mod tests {
     use super::*;
     use serde_json::{json, Value};
 
-    // Tauri hands an absent `plugins.dkackman-passkey` entry to the plugin as `null`;
+    // Tauri hands an absent `plugins.passkey` entry to the plugin as `null`;
     // the plugin is built with `Option<Config>` so that is not a startup error.
     #[test]
     fn absent_plugin_config_deserializes_to_none() {

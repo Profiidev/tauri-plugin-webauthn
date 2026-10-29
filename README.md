@@ -4,19 +4,17 @@ A Tauri plugin providing WebAuthn/FIDO2/passkey authentication for Linux, Window
 macOS, iOS, and Android — a near drop-in replacement for `@simplewebauthn/browser`
 where the app also passes an origin URL to the register and authenticate calls.
 
-This is a maintained fork, published under the `dkackman` namespace (crate
-`tauri-plugin-dkackman-passkey`, npm `@dkackman/tauri-plugin-passkey-api`); see
-[Acknowledgments](#acknowledgments) for its upstream.
+See [Acknowledgments](#acknowledgments) for its upstream.
 
-[![npm](https://img.shields.io/npm/v/@dkackman/tauri-plugin-passkey-api)](https://www.npmjs.com/package/@dkackman/tauri-plugin-passkey-api)
-[![Crates.io Downloads (latest version)](https://img.shields.io/crates/dv/tauri-plugin-dkackman-passkey)](https://crates.io/crates/tauri-plugin-dkackman-passkey)
+[![npm](https://img.shields.io/npm/v/tauri-plugin-passkey-api)](https://www.npmjs.com/package/tauri-plugin-passkey-api)
+[![Crates.io Downloads (latest version)](https://img.shields.io/crates/dv/tauri-plugin-passkey)](https://crates.io/crates/tauri-plugin-passkey)
 
 > **Using the plugin in your app?** The consumer documentation — installation, API
 > reference, and per-platform setup — lives in
 > **[`tauri-plugin-passkey/README.md`](tauri-plugin-passkey/README.md)**, which is
 > also what renders on
-> [npm](https://www.npmjs.com/package/@dkackman/tauri-plugin-passkey-api) and
-> [crates.io](https://crates.io/crates/tauri-plugin-dkackman-passkey). This file covers working
+> [npm](https://www.npmjs.com/package/tauri-plugin-passkey-api) and
+> [crates.io](https://crates.io/crates/tauri-plugin-passkey). This file covers working
 > on the repository itself.
 
 ## Repository layout
@@ -28,12 +26,11 @@ A pnpm workspace monorepo:
 | [`tauri-plugin-passkey/`](tauri-plugin-passkey/) | The plugin — Rust core, Swift (iOS/macOS), Kotlin (Android), TS bindings |
 | [`test-app/`](test-app/)                         | A Tauri (SvelteKit) app exercising the plugin on each platform           |
 
-The published names carry the `dkackman` namespace: crate
-`tauri-plugin-dkackman-passkey` (Rust path `tauri_plugin_dkackman_passkey`), npm
-`@dkackman/tauri-plugin-passkey-api`, and Tauri plugin id `dkackman-passkey` (invoked
-from JS as `plugin:dkackman-passkey|<command>`, permission `dkackman-passkey:default`,
-config key `plugins.dkackman-passkey`). The directory is still `tauri-plugin-passkey/`,
-and some native identifiers (the iOS Swift module `WebauthnPlugin`, the macOS
+The published names, the directory, and the runtime Tauri plugin identity are
+`passkey`: crate `tauri-plugin-passkey` (Rust path `tauri_plugin_passkey`), npm
+`tauri-plugin-passkey-api`, and Tauri plugin id `passkey` (invoked from JS as
+`plugin:passkey|<command>`, permission `passkey:default`, config key
+`plugins.passkey`). Some native identifiers (the iOS Swift module `WebauthnPlugin`, the macOS
 `WebauthnBridge`, the Android package `net.kackman.webauthn`) still use the plugin's
 historical `webauthn` name. See [`CLAUDE.md`](CLAUDE.md) for the full naming rationale
 and architecture notes.
@@ -124,7 +121,7 @@ MIT OR Apache-2.0
 
 ## Acknowledgments
 
-This is a maintained fork, published under the `dkackman` namespace. It is a derivative of [`tauri-plugin-webauthn`](https://github.com/Profiidev/tauri-plugin-webauthn)
+This project is a derivative of [`tauri-plugin-webauthn`](https://github.com/Profiidev/tauri-plugin-webauthn)
 by [ProfiiDev](https://github.com/Profiidev), itself originally forked from
 [fendent/tauri-plugin-webauthn](https://github.com/fendent/tauri-plugin-webauthn). See
 [NOTICE](NOTICE) for full attribution and [LICENSE-MIT](LICENSE-MIT) for the retained

@@ -48,7 +48,7 @@ impl<R: Runtime, T: Manager<R>> crate::WebauthnExt<R> for T {
 
 /// Initializes the plugin.
 pub fn init<R: Runtime>() -> TauriPlugin<R, Option<Config>> {
-    Builder::<R, Option<Config>>::new("dkackman-passkey")
+    Builder::<R, Option<Config>>::new("passkey")
         .invoke_handler(tauri::generate_handler![
             commands::register,
             commands::authenticate,
@@ -57,12 +57,12 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, Option<Config>> {
             commands::cancel,
         ])
         .setup(|app, api| {
-            // An absent `plugins.dkackman-passkey` entry arrives as `null` (None).
+            // An absent `plugins.passkey` entry arrives as `null` (None).
             let config = api.config().clone().unwrap_or_default();
             #[cfg(feature = "log")]
             if config.rejects_every_origin() {
                 log::warn!(
-                    "plugins.dkackman-passkey.allowedOrigins is set but contains no usable \
+                    "plugins.passkey.allowedOrigins is set but contains no usable \
                      http(s) origin {:?}; every register/authenticate call will be rejected",
                     config.allowed_origins
                 );

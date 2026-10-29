@@ -22,7 +22,7 @@
     }
   },
   "plugins": {
-    "dkackman-passkey": {
+    "passkey": {
       "allowedOrigins": []
     }
   },

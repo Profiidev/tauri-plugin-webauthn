@@ -8,19 +8,18 @@ an example app in `test-app/`.
 
 ## Naming: published names vs. native identifiers
 
-This is a maintained fork published under the `dkackman` namespace. The published and
-runtime names carry that namespace; the repository and its `tauri-plugin-passkey/`
-directory do not:
+The repository, the directory, the crate, the npm package, and the runtime plugin
+identity are all named `passkey`:
 
-- Crate: `tauri-plugin-dkackman-passkey` (`Cargo.toml` in `tauri-plugin-passkey/`;
-  `links` matches), Rust path `tauri_plugin_dkackman_passkey::init()`
-- npm package: `@dkackman/tauri-plugin-passkey-api` (`@tauri-apps/api` is a peer dependency)
-- Tauri plugin id `Builder::new("dkackman-passkey")` in `src/lib.rs`, invoked from JS as
-  `plugin:dkackman-passkey|<command>`, permission identifiers `dkackman-passkey:*`,
-  app config under `plugins.dkackman-passkey` in `tauri.conf.json`
+- Crate: `tauri-plugin-passkey` (`Cargo.toml` in `tauri-plugin-passkey/`; `links`
+  matches), Rust path `tauri_plugin_passkey::init()`
+- npm package: `tauri-plugin-passkey-api` (`@tauri-apps/api` is a peer dependency)
+- Tauri plugin id `Builder::new("passkey")` in `src/lib.rs`, invoked from JS as
+  `plugin:passkey|<command>`, permission identifiers `passkey:*`, app config under
+  `plugins.passkey` in `tauri.conf.json`
 
-Several native identifiers predate both renames and still use the plugin's historical
-`webauthn` (or bare `passkey`) name:
+Several native identifiers predate the rename and still use the plugin's historical
+`webauthn` name:
 
 - Android plugin class registration: `net.kackman.webauthn` / `WebauthnPlugin`
 - iOS: the Swift package (`ios/Package.swift`) is named `tauri-plugin-passkey`, its source
@@ -30,7 +29,7 @@ Several native identifiers predate both renames and still use the plugin's histo
 - The Linux event name is `tauri-plugin-passkey` (`EVENT_NAME` in `guest-js/index.ts`)
 
 Don't be surprised when the native identifiers say `webauthn` but Cargo.toml,
-package.json, and permission strings say `dkackman-passkey` — that split is intentional
+package.json, and permission strings say `passkey` — that split is intentional
 (renaming the native class/package names is a separate, larger change).
 
 ## Architecture
@@ -43,7 +42,7 @@ package.json, and permission strings say `dkackman-passkey` — that split is in
   - `windows.rs` — Windows
 - `src/lib.rs` — picks the backend via `cfg`, registers the five commands
   (`register`, `authenticate`, `send_pin`, `select_key`, `cancel`) with
-  `Builder::new("dkackman-passkey")`; `init()` returns `TauriPlugin<R, Option<Config>>`
+  `Builder::new("passkey")`; `init()` returns `TauriPlugin<R, Option<Config>>`
 - `src/config.rs` — plugin config (`allowedOrigins`); `src/validation.rs` enforces it and
   the rpId/origin checks
 - `src/commands.rs` — the `#[command]` handlers invoked from JS (timeout precedence,
@@ -159,14 +158,6 @@ pnpm build    # Everything builds
 2. Review the diff, commit
 3. `./tag-release.sh vX.Y.Z[-suffix]` — validates the tag matches the bumped versions,
    tags, and pushes, which triggers `.github/workflows/publish.yml` (crates.io + npm)
-
-**First release under the `dkackman` names only:** neither registry's trusted publishing
-can create a new package, so publish that version manually once — `cargo publish` from
-`tauri-plugin-passkey/` (with a crates.io API token), and `pnpm build` then
-`npm publish --access public` from `tauri-plugin-passkey/`. Then add this repository's
-`publish.yml` as the trusted publisher for `tauri-plugin-dkackman-passkey` on crates.io
-and `@dkackman/tauri-plugin-passkey-api` on npmjs.com; later releases go through the
-workflow as above.
 
 ## Debugging
 

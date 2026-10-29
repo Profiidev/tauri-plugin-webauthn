@@ -22,7 +22,7 @@ tauri = { version = "2", features = ["devtools"] }
 tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-tauri-plugin-dkackman-passkey = { path = "../../tauri-plugin-passkey" }
+tauri-plugin-passkey = { path = "../../tauri-plugin-passkey" }
 tauri-plugin-log = "2"
 webauthn-rs-proto = "0.5.1"
 webauthn-rs = { version = "0.5.1", features = ["conditional-ui"] }

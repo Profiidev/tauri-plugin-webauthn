@@ -41,9 +41,6 @@ importers:
 
   test-app:
     dependencies:
-      '@dkackman/tauri-plugin-passkey-api':
-        specifier: file:../tauri-plugin-passkey
-        version: link:../tauri-plugin-passkey
       '@tauri-apps/api':
         specifier: ^2.11.1
         version: 2.11.1
@@ -53,6 +50,9 @@ importers:
       '@tauri-apps/plugin-opener':
         specifier: ^2.5.4
         version: 2.5.4
+      tauri-plugin-passkey-api:
+        specifier: file:../tauri-plugin-passkey
+        version: link:../tauri-plugin-passkey
     devDependencies:
       '@sveltejs/adapter-static':
         specifier: ^3.0.10

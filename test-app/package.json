@@ -23,7 +23,7 @@
     "@tauri-apps/api": "^2.11.1",
     "@tauri-apps/plugin-log": "^2.9.0",
     "@tauri-apps/plugin-opener": "^2.5.4",
-    "@dkackman/tauri-plugin-passkey-api": "file:../tauri-plugin-passkey"
+    "tauri-plugin-passkey-api": "file:../tauri-plugin-passkey"
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "^3.0.10",

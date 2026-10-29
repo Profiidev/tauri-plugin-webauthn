@@ -6,7 +6,7 @@ Native passkey registration and authentication on macOS using Apple's [ASAuthori
 
 ```
 Tauri App (Rust)
-  └─ tauri-plugin-dkackman-passkey
+  └─ tauri-plugin-passkey
        └─ macos.rs (FFI calls)
             └─ WebauthnBridge (Swift static library)
                  ├─ Exports.swift   - C-callable functions, JSON serialization
@@ -26,7 +26,7 @@ In your app's `src-tauri/Cargo.toml`:
 
 ```toml
 [dependencies]
-tauri-plugin-dkackman-passkey = "0.3"
+tauri-plugin-passkey = "0.3"
 ```
 
 ### 2. Add Swift runtime rpath to build.rs
@@ -49,7 +49,7 @@ In your app's `src-tauri/src/lib.rs`:
 
 ```rust
 tauri::Builder::default()
-    .plugin(tauri_plugin_dkackman_passkey::init())
+    .plugin(tauri_plugin_passkey::init())
     // ...
 ```
 
@@ -59,7 +59,7 @@ In `src-tauri/capabilities/default.json`, add the plugin's permission:
 
 ```json
 {
-  "permissions": ["dkackman-passkey:default"]
+  "permissions": ["passkey:default"]
 }
 ```
 
@@ -256,7 +256,7 @@ sudo swcutil dl -d yourdomain.com  # fetches AASA directly (bypasses CDN)
 
 The `rpId` in your WebAuthn options must match a domain listed in your associated domains entitlement. This is **not** the Tauri webview origin (`tauri://localhost`) - it's your actual domain, and the `origin` you pass to `register`/`authenticate` must be an `https` origin on it (e.g. `https://example.com`).
 
-The associated-domains entitlement is what binds the rpId to your app on macOS. You can additionally pin the origin with `plugins.dkackman-passkey.allowedOrigins` in `tauri.conf.json` (see the plugin README's [Security model](../README.md#security-model)); list `https://` origins there — a `tauri://localhost` entry matches nothing, and a non-empty list with no usable `http(s)` entry rejects every origin (fail closed); the plugin logs a warning at startup in that case.
+The associated-domains entitlement is what binds the rpId to your app on macOS. You can additionally pin the origin with `plugins.passkey.allowedOrigins` in `tauri.conf.json` (see the plugin README's [Security model](../README.md#security-model)); list `https://` origins there — a `tauri://localhost` entry matches nothing, and a non-empty list with no usable `http(s)` entry rejects every origin (fail closed); the plugin logs a warning at startup in that case.
 
 Example server-side registration options:
 

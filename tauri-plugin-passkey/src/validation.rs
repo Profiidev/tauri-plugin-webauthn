@@ -44,7 +44,7 @@ pub fn validate_rp_id(origin: &Url, rp_id: &str) -> crate::Result<()> {
     }
 }
 
-/// Enforce the optional `plugins.dkackman-passkey.allowedOrigins` pin. An empty list
+/// Enforce the optional `plugins.passkey.allowedOrigins` pin. An empty list
 /// (the default) allows any origin, leaving only [`validate_rp_id`]'s checks.
 /// Otherwise the origin's ASCII serialization must equal one of the entries'
 /// — each entry is parsed as a URL and reduced to its origin, so
@@ -64,7 +64,7 @@ pub fn validate_origin_allowed(origin: &Url, allowed: &[String]) -> crate::Resul
         Ok(())
     } else {
         Err(validation_error(&format!(
-            "origin {origin} is not in plugins.dkackman-passkey.allowedOrigins"
+            "origin {origin} is not in plugins.passkey.allowedOrigins"
         )))
     }
 }
@@ -207,8 +207,7 @@ mod tests {
         assert_eq!(err.kind(), "validation");
         assert!(err.to_string().contains("https://evil.com"), "{err}");
         assert!(
-            err.to_string()
-                .contains("plugins.dkackman-passkey.allowedOrigins"),
+            err.to_string().contains("plugins.passkey.allowedOrigins"),
             "{err}"
         );
     }
