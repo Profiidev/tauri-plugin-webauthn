@@ -39,7 +39,7 @@ impl<R: Runtime> Authenticator<R> for Webauthn<R> {
         _origin: Url,
         options: PublicKeyCredentialCreationOptions,
         prf: Option<PrfRegistrationInput>,
-        _timeout: u32,
+        timeout: u32,
     ) -> crate::Result<(RegisterPublicKeyCredential, Option<PrfRegistrationOutput>)> {
         #[cfg(target_os = "android")]
         let options = {
@@ -53,6 +53,7 @@ impl<R: Runtime> Authenticator<R> for Webauthn<R> {
             // Credential Manager and ASAuthorization both want the browser spelling.
             crate::prf::set_registration_prf_input(&mut options);
         }
+        super::bridge_timeout::with_timeout(&mut options, timeout);
 
         let v: serde_json::Value = self
             .0
@@ -70,12 +71,13 @@ impl<R: Runtime> Authenticator<R> for Webauthn<R> {
         _origin: Url,
         options: PublicKeyCredentialRequestOptions,
         prf: Option<PrfAuthenticationInput>,
-        _timeout: u32,
+        timeout: u32,
     ) -> crate::Result<(PublicKeyCredential, Option<PrfAuthenticationOutput>)> {
         let mut options = serde_json::to_value(&options)?;
         if let Some(prf) = &prf {
             crate::prf::set_authentication_prf_input(&mut options, prf);
         }
+        super::bridge_timeout::with_timeout(&mut options, timeout);
 
         let v: serde_json::Value = self
             .0

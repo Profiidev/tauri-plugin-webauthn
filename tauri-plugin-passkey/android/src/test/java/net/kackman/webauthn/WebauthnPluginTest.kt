@@ -1,8 +1,14 @@
 package net.kackman.webauthn
 
-import org.json.JSONObject
+import androidx.credentials.exceptions.CreateCredentialCancellationException
+import androidx.credentials.exceptions.GetCredentialCancellationException
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -55,5 +61,53 @@ class WebauthnPluginTest {
             )
         val prf = response.getJSONObject("prf")
         assertEquals("c2VjcmV0", prf.getString("first"))
+    }
+
+    @Test
+    fun flattenOmitsPrfWhenClientExtensionResultsPrfIsEmpty() {
+        val input = """{"clientExtensionResults":{"prf":{}}}"""
+        val result = WebauthnPlugin.flattenPrfOutput(input)
+        assertFalse("an empty prf result must not add a top-level prf", result.has("prf"))
+    }
+
+    // --- errorCode --------------------------------------------------------
+
+    @Test
+    fun errorCodeMapsCancellationExceptions() {
+        assertEquals("cancelled", WebauthnPlugin.errorCode(CreateCredentialCancellationException()))
+        assertEquals("cancelled", WebauthnPlugin.errorCode(GetCredentialCancellationException()))
+        assertEquals("cancelled", WebauthnPlugin.errorCode(CancellationException("job cancelled")))
+    }
+
+    @Test
+    fun errorCodeMapsTimeout() {
+        val timeout: TimeoutCancellationException =
+            try {
+                runBlocking { withTimeout(1) { kotlinx.coroutines.delay(1_000) } }
+                throw AssertionError("withTimeout did not time out")
+            } catch (e: TimeoutCancellationException) {
+                e
+            }
+        assertEquals("timeout", WebauthnPlugin.errorCode(timeout))
+    }
+
+    @Test
+    fun errorCodeIsNullForOtherExceptions() {
+        assertNull(WebauthnPlugin.errorCode(IllegalStateException("boom")))
+        assertNull(WebauthnPlugin.errorCode(RuntimeException()))
+    }
+
+    // --- timeoutMs --------------------------------------------------------
+
+    @Test
+    fun timeoutMsReadsTopLevelTimeout() {
+        assertEquals(1234L, WebauthnPlugin.timeoutMs("""{"challenge":"x","timeout":1234}"""))
+    }
+
+    @Test
+    fun timeoutMsDefaultsWhenAbsentOrInvalid() {
+        assertEquals(60_000L, WebauthnPlugin.timeoutMs("""{"challenge":"x"}"""))
+        assertEquals(60_000L, WebauthnPlugin.timeoutMs("""{"timeout":0}"""))
+        assertEquals(60_000L, WebauthnPlugin.timeoutMs("not json"))
     }
 }

@@ -8,6 +8,8 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetPublicKeyCredentialOption
 import androidx.credentials.PublicKeyCredential
+import androidx.credentials.exceptions.CreateCredentialCancellationException
+import androidx.credentials.exceptions.GetCredentialCancellationException
 import app.tauri.annotation.Command
 import app.tauri.annotation.TauriPlugin
 import app.tauri.plugin.Invoke
@@ -17,7 +19,9 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import org.json.JSONObject
 
 @TauriPlugin
@@ -42,10 +46,12 @@ class WebauthnPlugin(
             scope.launch {
                 try {
                     val result =
-                        credentialManager.createCredential(
-                            pluginActivity,
-                            createPublicKeyCredentialRequest,
-                        )
+                        withTimeout(timeoutMs(args)) {
+                            credentialManager.createCredential(
+                                pluginActivity,
+                                createPublicKeyCredentialRequest,
+                            )
+                        }
 
                     when (result) {
                         is CreatePublicKeyCredentialResponse -> {
@@ -57,11 +63,14 @@ class WebauthnPlugin(
                             invoke.reject("Invalid credential type")
                         }
                     }
+                } catch (e: TimeoutCancellationException) {
+                    // Our own withTimeout fired; the job itself is still live.
+                    invoke.reject("Operation timed out", errorCode(e))
                 } catch (e: CancellationException) {
-                    invoke.reject("Operation cancelled")
+                    invoke.reject("Operation cancelled", errorCode(e))
                     throw e
                 } catch (e: Exception) {
-                    invoke.reject(e.message ?: e.javaClass.simpleName)
+                    invoke.reject(e.message ?: e.javaClass.simpleName, errorCode(e))
                 }
             }
     }
@@ -83,11 +92,13 @@ class WebauthnPlugin(
             scope.launch {
                 try {
                     val result =
-                        credentialManager
-                            .getCredential(
-                                pluginActivity,
-                                getCredRequest,
-                            ).credential
+                        withTimeout(timeoutMs(args)) {
+                            credentialManager
+                                .getCredential(
+                                    pluginActivity,
+                                    getCredRequest,
+                                ).credential
+                        }
 
                     when (result) {
                         is PublicKeyCredential -> {
@@ -99,11 +110,14 @@ class WebauthnPlugin(
                             invoke.reject("Invalid credential type")
                         }
                     }
+                } catch (e: TimeoutCancellationException) {
+                    // Our own withTimeout fired; the job itself is still live.
+                    invoke.reject("Operation timed out", errorCode(e))
                 } catch (e: CancellationException) {
-                    invoke.reject("Operation cancelled")
+                    invoke.reject("Operation cancelled", errorCode(e))
                     throw e
                 } catch (e: Exception) {
-                    invoke.reject(e.message ?: e.javaClass.simpleName)
+                    invoke.reject(e.message ?: e.javaClass.simpleName, errorCode(e))
                 }
             }
     }
@@ -116,6 +130,38 @@ class WebauthnPlugin(
     }
 
     internal companion object {
+        // Matches the WebAuthn default the Rust side would otherwise send.
+        private const val DEFAULT_TIMEOUT_MS = 60_000L
+
+        // Machine-readable reject code consumed by mobile.rs `map_invoke_error`.
+        // TimeoutCancellationException is a CancellationException, so it is
+        // checked first.
+        @VisibleForTesting
+        fun errorCode(e: Throwable): String? =
+            when (e) {
+                is TimeoutCancellationException -> "timeout"
+
+                is CreateCredentialCancellationException,
+                is GetCredentialCancellationException,
+                is CancellationException,
+                -> "cancelled"
+
+                else -> null
+            }
+
+        // mobile.rs injects the command's timeout as the top-level `timeout`
+        // member of the options JSON (a standard WebAuthn options field).
+        @VisibleForTesting
+        fun timeoutMs(optionsJson: String): Long {
+            val timeout =
+                try {
+                    JSONObject(optionsJson).optLong("timeout", 0L)
+                } catch (_: Exception) {
+                    0L
+                }
+            return if (timeout > 0) timeout else DEFAULT_TIMEOUT_MS
+        }
+
         // The shared Rust parser (mobile.rs) expects a flat top-level `prf`
         // object — {"enabled": bool} after registration, {"first"/"second":
         // base64url} after authentication — matching what the Swift bridges
@@ -142,7 +188,11 @@ class WebauthnPlugin(
                     .takeIf { it.isNotEmpty() }
                     ?.let { flat.put("second", it) }
             }
-            response.put("prf", flat)
+            // An empty `prf` would read as "extension present, nothing in it";
+            // leave it off so Rust sees the same shape as no PRF at all.
+            if (flat.length() > 0) {
+                response.put("prf", flat)
+            }
             return response
         }
     }
