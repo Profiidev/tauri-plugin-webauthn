@@ -1,6 +1,6 @@
 # WebAuthn Example App
 
-A Tauri + SvelteKit example demonstrating the `tauri-plugin-passkey` plugin across
+A Tauri + SvelteKit example demonstrating the `tauri-plugin-dkackman-passkey` plugin across
 macOS, iOS, Android, Windows, and Linux. The PIN-entry and key-selection UI only
 activates on Linux; other platforms use native OS dialogs for those steps.
 
@@ -32,7 +32,7 @@ This updates `src-tauri/tauri.conf.json` and generates `src-tauri/Entitlements.p
 
 To edit values manually instead, see `src-tauri/Entitlements.plist.example` for the template.
 
-For more detail on platform-specific signing requirements, see the [macOS](../../macos/README.md) and [iOS](../../ios/README.md) READMEs.
+For more detail on platform-specific signing requirements, see the [macOS](../tauri-plugin-passkey/macos/README.md) and [iOS](../tauri-plugin-passkey/ios/README.md) READMEs.
 
 ## Relying Party Domain
 
@@ -194,6 +194,10 @@ pnpm tauri ios dev --open
 
 ## Notes
 
+- `src-tauri/tauri.conf.json` sets `plugins.dkackman-passkey.allowedOrigins` to `[]`
+  on purpose: the relying-party origin is editable in the UI, so pinning it would
+  break the example. A real app should list its origin(s) — see the plugin README's
+  [Security model](../tauri-plugin-passkey/README.md#security-model).
 - Registered credentials are persisted to `passkey-store.json` in the app data
   directory, so they survive restarts. Delete that file to reset the demo state.
 - The in-app console shows color-coded log entries for registration/authentication flow.

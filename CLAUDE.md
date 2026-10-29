@@ -6,23 +6,32 @@ macOS, iOS, and Android.
 This is a **pnpm workspace monorepo**: the plugin lives in `tauri-plugin-passkey/` and
 an example app in `test-app/`.
 
-## Naming: repo vs. runtime identity
+## Naming: published names vs. native identifiers
 
-The repository, the directory, the crate, and npm package are named `passkey`
-(`tauri-plugin-passkey`, `tauri-plugin-passkey-api`). A few native-platform identifiers
-predate that rename and still use the plugin's historical `webauthn` name:
+This is a maintained fork published under the `dkackman` namespace. The published and
+runtime names carry that namespace; the repository and its `tauri-plugin-passkey/`
+directory do not:
 
-- Crate: `tauri-plugin-passkey` (`Cargo.toml` in `tauri-plugin-passkey/`)
-- npm package: `tauri-plugin-passkey-api`
-- Tauri plugin name used by `Builder::new("passkey")` in `src/lib.rs`, invoked from JS
-  as `plugin:passkey|<command>`, permissions identifiers `passkey:*`
-- Android plugin class registration still uses `net.kackman.webauthn` / `WebauthnPlugin`
-- The iOS Swift package itself (`ios/Package.swift`) is named `tauri-plugin-passkey`, but
-  its source module/class is still `WebauthnPlugin` (`ios/Sources/WebauthnPlugin/`)
+- Crate: `tauri-plugin-dkackman-passkey` (`Cargo.toml` in `tauri-plugin-passkey/`;
+  `links` matches), Rust path `tauri_plugin_dkackman_passkey::init()`
+- npm package: `@dkackman/tauri-plugin-passkey-api` (`@tauri-apps/api` is a peer dependency)
+- Tauri plugin id `Builder::new("dkackman-passkey")` in `src/lib.rs`, invoked from JS as
+  `plugin:dkackman-passkey|<command>`, permission identifiers `dkackman-passkey:*`,
+  app config under `plugins.dkackman-passkey` in `tauri.conf.json`
 
-Don't be surprised when the Android/iOS native identifiers say `webauthn` but
-Cargo.toml, package.json, and permission strings say `passkey` — that split is
-intentional (renaming the native class/package names is a separate, larger change).
+Several native identifiers predate both renames and still use the plugin's historical
+`webauthn` (or bare `passkey`) name:
+
+- Android plugin class registration: `net.kackman.webauthn` / `WebauthnPlugin`
+- iOS: the Swift package (`ios/Package.swift`) is named `tauri-plugin-passkey`, its source
+  module/class is `WebauthnPlugin` (`ios/Sources/WebauthnPlugin/`), and its entry point is
+  `@_cdecl("init_plugin_passkey")`
+- macOS: the Swift package and module are `WebauthnBridge`
+- The Linux event name is `tauri-plugin-passkey` (`EVENT_NAME` in `guest-js/index.ts`)
+
+Don't be surprised when the native identifiers say `webauthn` but Cargo.toml,
+package.json, and permission strings say `dkackman-passkey` — that split is intentional
+(renaming the native class/package names is a separate, larger change).
 
 ## Architecture
 
@@ -34,14 +43,20 @@ intentional (renaming the native class/package names is a separate, larger chang
   - `windows.rs` — Windows
 - `src/lib.rs` — picks the backend via `cfg`, registers the five commands
   (`register`, `authenticate`, `send_pin`, `select_key`, `cancel`) with
-  `Builder::new("passkey")`
-- `src/commands.rs` — the `#[command]` handlers invoked from JS
+  `Builder::new("dkackman-passkey")`; `init()` returns `TauriPlugin<R, Option<Config>>`
+- `src/config.rs` — plugin config (`allowedOrigins`); `src/validation.rs` enforces it and
+  the rpId/origin checks
+- `src/commands.rs` — the `#[command]` handlers invoked from JS (timeout precedence,
+  `busy` guard via `src/inflight.rs`)
 - `build.rs` — `COMMANDS` array (must match `invoke_handler` and `commands.rs`) and the
-  Swift linker setup for macOS
+  Swift linker setup for macOS, including a link-search fallback for Xcode 27's
+  SwiftPM `Products/<Configuration>` output layout that swift-rs does not search
 - Native code:
-  - `macos/Sources/WebauthnBridge/` — Swift FFI bridge (Exports.swift, PasskeyHandler.swift)
-  - `ios/Sources/WebauthnPlugin/` — Tauri mobile plugin (WebauthnPlugin.swift,
+  - `macos/Sources/WebauthnBridge/` — Swift FFI bridge (Exports.swift, Options.swift,
     PasskeyHandler.swift)
+  - `ios/Sources/WebauthnPlugin/` — Tauri mobile plugin (WebauthnPlugin.swift,
+    Options.swift, PasskeyHandler.swift). `Options.swift` is duplicated between iOS and
+    macOS; keep the copies identical apart from the `#available` check and its message
   - `android/src/main/java/WebauthnPlugin.kt` — Android Credential Manager integration
 - `guest-js/index.ts` — the JS/TS API surface
 
@@ -85,6 +100,20 @@ pnpm test:swift:macos # just the macOS WebauthnBridge SwiftPM tests (no simulato
 pnpm test:swift:ios   # just the iOS plugin tests (needs an iOS simulator)
 pnpm test:android # ./gradlew test (Robolectric unit tests; needs materialize-tauri-android.sh first)
 ```
+
+Environment notes:
+
+- On macOS, run Rust tests with `tauri-plugin-passkey/scripts/test-macos.sh` (passes args
+  through to `cargo test`). It puts Xcode's `swift` first on `PATH` and links with
+  `/usr/bin/cc`, because a stray swiftly toolchain cannot build `WebauthnBridge` and the
+  devenv `cc` cannot see macOS system libraries.
+- `build.rs` adds a swift-rs link-path fallback for newer Xcode (27), whose SwiftPM writes
+  the static library under `Products/<Configuration>`; no action needed, but it is the
+  first place to look if `WebauthnBridge` stops linking after an Xcode upgrade.
+- `cargo check` of the test app under devenv needs the system toolchain:
+  `CC=/usr/bin/cc CXX=/usr/bin/c++ AR=/usr/bin/ar SDKROOT=$(xcrun --sdk macosx --show-sdk-path) cargo check`
+  (from `test-app/src-tauri`).
+- Android Gradle tasks need a JDK 17–24 (CI uses 17).
 
 ### Running the test app
 
@@ -130,6 +159,14 @@ pnpm build    # Everything builds
 2. Review the diff, commit
 3. `./tag-release.sh vX.Y.Z[-suffix]` — validates the tag matches the bumped versions,
    tags, and pushes, which triggers `.github/workflows/publish.yml` (crates.io + npm)
+
+**First release under the `dkackman` names only:** neither registry's trusted publishing
+can create a new package, so publish that version manually once — `cargo publish` from
+`tauri-plugin-passkey/` (with a crates.io API token), and `pnpm build` then
+`npm publish --access public` from `tauri-plugin-passkey/`. Then add this repository's
+`publish.yml` as the trusted publisher for `tauri-plugin-dkackman-passkey` on crates.io
+and `@dkackman/tauri-plugin-passkey-api` on npmjs.com; later releases go through the
+workflow as above.
 
 ## Debugging
 

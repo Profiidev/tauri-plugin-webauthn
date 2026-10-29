@@ -6,16 +6,17 @@ Native passkey registration and authentication on iOS using Apple's [ASAuthoriza
 
 ```
 Tauri App (Rust)
-  └─ tauri-plugin-passkey
+  └─ tauri-plugin-dkackman-passkey
        └─ mobile.rs (run_mobile_plugin calls)
             └─ WebauthnPlugin (Swift, Tauri Plugin)
                  ├─ WebauthnPlugin.swift - Plugin entry point, JSON parsing, response serialization
+                 ├─ Options.swift        - option decoding and mapping (shared with macOS)
                  └─ PasskeyHandler.swift - ASAuthorizationController wrapper
 ```
 
-The Rust side calls `run_mobile_plugin("register", ...)` / `run_mobile_plugin("authenticate", ...)` with JSON-serialized WebAuthn options. The Swift plugin decodes the JSON, runs the ASAuthorization flow on the main thread, serializes the credential response back to JSON, and resolves the Tauri invoke. The Rust side deserializes the JSON into `webauthn-rs-proto` types.
+The Rust side calls `run_mobile_plugin("register", ...)` / `run_mobile_plugin("authenticate", ...)` with JSON-serialized WebAuthn options, `extensions.prf`, and a top-level `timeout` in milliseconds. The Swift plugin decodes the JSON, runs the ASAuthorization flow on the main thread, serializes the credential response back to JSON, and resolves the Tauri invoke. Failures reject with a machine-readable code (`cancelled`, `timeout`, `unsupported`) that Rust maps to the plugin's error kinds (`timeout` becomes `authenticator`). The Rust side deserializes a successful response into `webauthn-rs-proto` types.
 
-Unlike the macOS bridge (which uses C-callable FFI via `swift-rs`), the iOS bridge uses Tauri's native mobile plugin system. The Swift code extends Tauri's `Plugin` class and is registered via the `@_cdecl("init_plugin_passkey")` entry point.
+Unlike the macOS bridge (which uses C-callable FFI via `swift-rs`), the iOS bridge uses Tauri's native mobile plugin system. The Swift code extends Tauri's `Plugin` class and is registered via the `@_cdecl("init_plugin_passkey")` entry point (a native name that predates the `dkackman-passkey` plugin id and is unchanged).
 
 ## Consuming App Setup
 
@@ -27,7 +28,7 @@ In your app's `src-tauri/Cargo.toml`:
 
 ```toml
 [dependencies]
-tauri-plugin-passkey = "0.2"
+tauri-plugin-dkackman-passkey = "0.3"
 ```
 
 ### 2. Register the plugin
@@ -36,17 +37,17 @@ In your app's `src-tauri/src/lib.rs`:
 
 ```rust
 tauri::Builder::default()
-    .plugin(tauri_plugin_passkey::init())
+    .plugin(tauri_plugin_dkackman_passkey::init())
     // ...
 ```
 
 ### 3. Add the capability
 
-In `src-tauri/capabilities/default.json`, add the webauthn permission:
+In `src-tauri/capabilities/default.json`, add the plugin's permission:
 
 ```json
 {
-  "permissions": ["passkey:default"]
+  "permissions": ["dkackman-passkey:default"]
 }
 ```
 
@@ -196,11 +197,11 @@ Example server-side registration options:
 }
 ```
 
-`requireResidentKey: true` is required — the `webauthn-rs-proto` crate deserializes this as a non-optional `bool` field.
+`requireResidentKey` may be omitted: the plugin fills in the browser default (`true` only when `residentKey` is `"required"`) before deserializing.
 
 ## Supported Authenticators
 
-The iOS plugin registers requests for both authenticator types:
+The iOS plugin builds requests for both authenticator types, subject to the options:
 
 | Type         | Provider                                                | What it covers                                                               |
 | ------------ | ------------------------------------------------------- | ---------------------------------------------------------------------------- |
@@ -208,6 +209,17 @@ The iOS plugin registers requests for both authenticator types:
 | Security Key | `ASAuthorizationSecurityKeyPublicKeyCredentialProvider` | USB/NFC/BLE FIDO2 security keys                                              |
 
 iOS presents a unified system sheet that lets the user choose between available authenticators.
+
+### How options are applied
+
+- `userVerification`, `attestation` and `excludeCredentials` are applied to both requests.
+- `authenticatorSelection.authenticatorAttachment: "platform"` offers only passkeys; `"cross-platform"` offers only security keys.
+- Security-key registration supports ES256 only. If `pubKeyCredParams` is non-empty and lacks ES256 (`-7`), no security-key request is made; if nothing is left to offer, registration fails with `unsupported`.
+- Ignored: `residentKey`, `hints`, credential `transports` (see Limitations), and `authenticatorAttachment` at authentication (both request types are always offered).
+- PRF (`extensions.prf`) is requested from passkeys only and needs iOS 18+. Below iOS 18, registration reports `prf.enabled: false` and an assertion that requests salts fails with `unsupported` before the sheet is shown.
+- The handler dismisses the sheet itself when the timeout elapses (default 60000 ms) and fails with a timeout.
+
+This mapping, the timeout dismissal, and PRF on iOS 18+ are covered by unit tests but have not yet been exercised on a real device.
 
 ## Differences from macOS
 
@@ -234,7 +246,7 @@ iOS presents a unified system sheet that lets the user choose between available 
 | Passkey APIs unavailable / registration fails | iOS version below the 17.4 minimum                       | Update the device to iOS 17.4+                                                                |
 | "Application not associated with domain X"    | Domain association not validated                         | Check: AASA is hosted, entitlements include the domain, App ID has Associated Domains enabled |
 | "Failed to parse registration options JSON"   | Malformed options from the Rust side                     | Verify your server returns valid WebAuthn options with all required fields                    |
-| "Failed to decode base64url fields"           | Invalid base64url encoding in challenge or user ID       | Ensure the server sends properly padded base64url strings                                     |
+| "Failed to decode base64url fields"           | Invalid base64url encoding in challenge or user ID       | Ensure the server sends valid base64url strings (padded or unpadded)                          |
 | No passkey sheet appears                      | Missing presentation anchor or not on main thread        | This is handled by the plugin; file an issue if it occurs                                     |
 | Xcode signing errors                          | Missing development team or provisioning profile         | Set `developmentTeam` in tauri.conf.json or `APPLE_DEVELOPMENT_TEAM` env var                  |
 | `CARGO_CFG_TARGET_OS` build errors            | Plugin build.rs trying to link macOS Swift on iOS target | Ensure the plugin's build.rs guards Swift linking with `CARGO_CFG_TARGET_OS == "macos"`       |

@@ -1,19 +1,20 @@
 # macOS Passkey Support
 
-Native passkey registration and authentication on macOS using Apple's [ASAuthorization](https://developer.apple.com/documentation/authenticationservices/asauthorization) framework. This bridge wraps [`ASAuthorizationPlatformPublicKeyCredentialProvider`](https://developer.apple.com/documentation/authenticationservices/asauthorizationplatformpublickeycredentialprovider) and exposes it to the Rust plugin via C-callable FFI functions.
+Native passkey registration and authentication on macOS using Apple's [ASAuthorization](https://developer.apple.com/documentation/authenticationservices/asauthorization) framework. This bridge wraps [`ASAuthorizationPlatformPublicKeyCredentialProvider`](https://developer.apple.com/documentation/authenticationservices/asauthorizationplatformpublickeycredentialprovider) (iCloud Keychain passkeys) and [`ASAuthorizationSecurityKeyPublicKeyCredentialProvider`](https://developer.apple.com/documentation/authenticationservices/asauthorizationsecuritykeypublickeycredentialprovider) (FIDO2 security keys) and exposes them to the Rust plugin via C-callable FFI functions.
 
 ## How It Works
 
 ```
 Tauri App (Rust)
-  └─ tauri-plugin-passkey
+  └─ tauri-plugin-dkackman-passkey
        └─ macos.rs (FFI calls)
             └─ WebauthnBridge (Swift static library)
                  ├─ Exports.swift   - C-callable functions, JSON serialization
+                 ├─ Options.swift   - option decoding and mapping (shared with iOS)
                  └─ PasskeyHandler.swift - ASAuthorizationController wrapper
 ```
 
-The Rust side calls `webauthn_register` / `webauthn_authenticate` with raw bytes (challenge, user ID, credential IDs) and a callback pointer. The Swift side runs the ASAuthorization flow on the main thread, serializes the credential response to JSON, and invokes the callback. The Rust side parses the JSON into `webauthn-rs-proto` types.
+The Rust side calls `webauthn_register` / `webauthn_authenticate` with one browser-shaped options JSON string (the WebAuthn options, `extensions.prf`, and a top-level `timeout` in milliseconds) and a callback pointer. The Swift side runs the ASAuthorization flow on the main thread, serializes the credential response to JSON, and invokes the callback; failures come back as `{"code", "message"}` JSON, which Rust maps to the plugin's error kinds (`cancelled`, `unsupported`, or `authenticator` for a timeout). The Rust side parses a successful response into `webauthn-rs-proto` types.
 
 ## Consuming App Setup
 
@@ -25,7 +26,7 @@ In your app's `src-tauri/Cargo.toml`:
 
 ```toml
 [dependencies]
-tauri-plugin-passkey = "0.2"
+tauri-plugin-dkackman-passkey = "0.3"
 ```
 
 ### 2. Add Swift runtime rpath to build.rs
@@ -48,17 +49,17 @@ In your app's `src-tauri/src/lib.rs`:
 
 ```rust
 tauri::Builder::default()
-    .plugin(tauri_plugin_passkey::init())
+    .plugin(tauri_plugin_dkackman_passkey::init())
     // ...
 ```
 
 ### 4. Add the capability
 
-In `src-tauri/capabilities/default.json`, add the webauthn permission:
+In `src-tauri/capabilities/default.json`, add the plugin's permission:
 
 ```json
 {
-  "permissions": ["passkey:default"]
+  "permissions": ["dkackman-passkey:default"]
 }
 ```
 
@@ -253,7 +254,9 @@ sudo swcutil dl -d yourdomain.com  # fetches AASA directly (bypasses CDN)
 
 ## WebAuthn Server Requirements
 
-The `rpId` in your WebAuthn options must match a domain listed in your associated domains entitlement. This is **not** the Tauri webview origin (`tauri://localhost`) - it's your actual domain.
+The `rpId` in your WebAuthn options must match a domain listed in your associated domains entitlement. This is **not** the Tauri webview origin (`tauri://localhost`) - it's your actual domain, and the `origin` you pass to `register`/`authenticate` must be an `https` origin on it (e.g. `https://example.com`).
+
+The associated-domains entitlement is what binds the rpId to your app on macOS. You can additionally pin the origin with `plugins.dkackman-passkey.allowedOrigins` in `tauri.conf.json` (see the plugin README's [Security model](../README.md#security-model)); list `https://` origins there — a `tauri://localhost` entry is ignored.
 
 Example server-side registration options:
 
@@ -285,9 +288,21 @@ The plugin accepts the browser `prf` extension directly and returns the browser 
 "extensions": { "prf": { "eval": { "first": "<base64url salt>" } } }
 ```
 
-The recovered secret is at `assertion.clientExtensionResults.prf.results.first` (base64url). `extensions.prf` is the only accepted spelling — the `webauthn-rs-proto` `hmacCreateSecret` / `hmacGetSecret` shape is not accepted; register with `prf: {}` and evaluate salts during authentication. Salts may be any length; ASAuthorization applies the browser's PRF derivation internally, so the salt you pass here is used exactly as it would be in a browser.
+The recovered secret is at `assertion.clientExtensionResults.prf.results.first` (base64url). `extensions.prf` is the only accepted spelling — the `hmacCreateSecret` / `hmacGetSecret` extensions and `prf.evalByCredential` are rejected with kind `unsupported`; register with `prf: {}` and evaluate salts during authentication. PRF is requested from passkeys only, not security keys. Salts may be any length; ASAuthorization applies the browser's PRF derivation internally, so the salt you pass here is used exactly as it would be in a browser.
 
-**Requires macOS 15+.** `ASAuthorizationPublicKeyCredentialPRFAssertionInput` is only used when `#available(macOS 15.0, *)`; on macOS 14 registration still succeeds but reports `prf.enabled: false`, and an assertion that requests salts fails with an `"unsupported"` error rather than silently returning no secret.
+**Requires macOS 15+.** `ASAuthorizationPublicKeyCredentialPRFAssertionInput` is only used when `#available(macOS 15.0, *)`; on macOS 14 registration still succeeds but reports `prf.enabled: false`, and an assertion that requests salts fails with an `"unsupported"` error before the sheet is shown, rather than silently returning no secret.
+
+### Options and timeout
+
+The macOS bridge shares its option mapping with iOS (`Options.swift`):
+
+- `userVerification`, `attestation` and `excludeCredentials` are applied to both the passkey and the security-key request.
+- `authenticatorSelection.authenticatorAttachment: "platform"` offers only passkeys; `"cross-platform"` offers only security keys.
+- Security-key registration supports ES256 only. If `pubKeyCredParams` is non-empty and lacks ES256 (`-7`), no security-key request is made; if nothing is left to offer, registration fails with `unsupported`.
+- Ignored: `residentKey`, `hints`, credential `transports` (all transports are allowed), and `authenticatorAttachment` at authentication.
+- The handler cancels the sheet itself when the timeout elapses (default 60000 ms) and reports a timeout; Rust gives up 2 s later as a backstop.
+
+This mapping, the timeout dismissal, and PRF on macOS 15+ are covered by unit tests but have not yet been exercised on real hardware.
 
 ## Limitations
 

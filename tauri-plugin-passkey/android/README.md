@@ -2,6 +2,8 @@
 
 Native passkey registration and authentication on Android using [Credential Manager](https://developer.android.com/identity/sign-in/credential-manager). This is a Tauri mobile plugin (`net.kackman.webauthn.WebauthnPlugin`) that wraps `androidx.credentials.CredentialManager` and exposes it to the Rust plugin via Tauri's mobile plugin system.
 
+The Kotlin package and class names predate the `dkackman-passkey` plugin id and are unchanged; install and permission setup are the same as on every platform — see the [plugin README](../README.md#install).
+
 ## Requirements
 
 - Android 9+ (API 28) — set in your app's `src-tauri/gen/android/app/build.gradle.kts`:
@@ -56,6 +58,13 @@ To find the SHA-256 fingerprint of the keystore you sign with, for use in `asset
 ```bash
 keytool -list -v -keystore <keystore> | grep SHA256
 ```
+
+## Behaviour
+
+- After the plugin's normalization (below) the WebAuthn options JSON is passed to Credential Manager, so Credential Manager decides how `userVerification`, `authenticatorAttachment`, `attestation` and similar options are honoured.
+- Credential Manager only creates discoverable credentials: `residentKey: "discouraged"` is rejected with kind `unsupported`, and a missing `residentKey` becomes `"preferred"`.
+- Each call is bounded by the plugin's timeout (the `timeout` argument, else the options' `timeout`, else 60000 ms); when it elapses the call fails with kind `authenticator` and a timeout message.
+- Dismissing the Credential Manager sheet, or calling `cancel()`, fails the call with kind `cancelled`.
 
 ## Logs
 
