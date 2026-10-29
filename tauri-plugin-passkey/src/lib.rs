@@ -48,7 +48,7 @@ impl<R: Runtime, T: Manager<R>> crate::WebauthnExt<R> for T {
 
 /// Initializes the plugin.
 pub fn init<R: Runtime>() -> TauriPlugin<R, Option<Config>> {
-    Builder::<R, Option<Config>>::new("passkey")
+    Builder::<R, Option<Config>>::new("dkackman-passkey")
         .invoke_handler(tauri::generate_handler![
             commands::register,
             commands::authenticate,
@@ -57,7 +57,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R, Option<Config>> {
             commands::cancel,
         ])
         .setup(|app, api| {
-            // An absent `plugins.passkey` entry arrives as `null` (None).
+            // An absent `plugins.dkackman-passkey` entry arrives as `null` (None).
             app.manage(api.config().clone().unwrap_or_default());
             let webauthn = Webauthn::init(app, api)?;
             app.manage(webauthn);

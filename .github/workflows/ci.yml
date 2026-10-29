@@ -340,18 +340,18 @@ jobs:
       - uses: actions/checkout@v7
 
       # cargo-semver-checks compares the crate's public API against its last
-      # published release. tauri-plugin-passkey has no crates.io release yet, so the
+      # published release. tauri-plugin-dkackman-passkey has no crates.io release yet, so the
       # check has no baseline and is skipped until the first publish — after which it
       # activates automatically and gates accidental breaking changes (recovering the
       # release-plz semver_check the fork used to run).
       - name: Check for a published baseline
         id: baseline
         run: |
-          if curl -sf "https://crates.io/api/v1/crates/tauri-plugin-passkey" | grep -q '"max_version"'; then
+          if curl -sf "https://crates.io/api/v1/crates/tauri-plugin-dkackman-passkey" | grep -q '"max_version"'; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::tauri-plugin-passkey is not published on crates.io yet — skipping semver baseline check."
+            echo "::notice::tauri-plugin-dkackman-passkey is not published on crates.io yet — skipping semver baseline check."
           fi
 
       - name: Install Linux dependencies
@@ -368,4 +368,4 @@ jobs:
         if: steps.baseline.outputs.exists == 'true'
         uses: obi1kenobi/cargo-semver-checks-action@v2
         with:
-          package: tauri-plugin-passkey
+          package: tauri-plugin-dkackman-passkey

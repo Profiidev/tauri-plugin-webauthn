@@ -3811,9 +3811,9 @@ checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
 
 [[package]]
 name = "swift-rs"
-version = "1.0.7"
+version = "1.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4057c98e2e852d51fdcfca832aac7b571f6b351ad159f9eda5db1655f8d0c4d7"
+checksum = "cefd87076fd385308ee4aff597256c902f1fbb4d031de1558efc12f8ffefadd9"
 dependencies = [
  "base64 0.21.7",
  "serde",
@@ -4072,6 +4072,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "tauri-plugin-dkackman-passkey"
+version = "0.2.0"
+dependencies = [
+ "authenticator",
+ "base64 0.23.0",
+ "base64urlsafedata",
+ "log",
+ "openssl",
+ "serde",
+ "serde_cbor_2",
+ "serde_json",
+ "sha2",
+ "swift-rs",
+ "tauri",
+ "tauri-plugin",
+ "thiserror 2.0.19",
+ "tokio",
+ "webauthn-authenticator-rs",
+ "webauthn-rs-proto",
+]
+
+[[package]]
 name = "tauri-plugin-log"
 version = "2.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4112,28 +4134,6 @@ dependencies = [
  "url",
  "windows 0.61.3",
  "zbus",
-]
-
-[[package]]
-name = "tauri-plugin-passkey"
-version = "0.2.0"
-dependencies = [
- "authenticator",
- "base64 0.23.0",
- "base64urlsafedata",
- "log",
- "openssl",
- "serde",
- "serde_cbor_2",
- "serde_json",
- "sha2",
- "swift-rs",
- "tauri",
- "tauri-plugin",
- "thiserror 2.0.19",
- "tokio",
- "webauthn-authenticator-rs",
- "webauthn-rs-proto",
 ]
 
 [[package]]
@@ -4946,9 +4946,9 @@ dependencies = [
  "serde_json",
  "tauri",
  "tauri-build",
+ "tauri-plugin-dkackman-passkey",
  "tauri-plugin-log",
  "tauri-plugin-opener",
- "tauri-plugin-passkey",
  "tracing",
  "webauthn-rs",
  "webauthn-rs-proto",

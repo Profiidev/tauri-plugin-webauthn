@@ -60,6 +60,11 @@ jobs:
         uses: rust-lang/crates-io-auth-action@v1
         id: crates-auth
 
+      # First release under the tauri-plugin-dkackman-passkey name: crates.io
+      # trusted publishing can only be configured for a crate that already exists,
+      # so publish that first version manually once (`cargo publish` from
+      # tauri-plugin-passkey/ with a crates.io API token), then add this repo as a
+      # trusted publisher for the crate. Later releases publish from here.
       - name: Publish to crates.io
         run: cargo publish
         env:
@@ -134,6 +139,11 @@ jobs:
       - name: Verify npm version
         run: npm --version
 
+      # First release under the @dkackman/tauri-plugin-passkey-api name: OIDC
+      # trusted publishing cannot create a brand-new scoped package, so publish that
+      # first version manually once (`pnpm build`, then `npm publish --access public`
+      # from tauri-plugin-passkey/), then configure this workflow as the package's
+      # trusted publisher on npmjs.com. Later releases publish from here.
       - name: Publish to npm
         run: npm publish --access public --tag ${{ steps.npm-tag.outputs.tag }} --provenance
 

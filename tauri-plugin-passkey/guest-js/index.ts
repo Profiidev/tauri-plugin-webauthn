@@ -124,11 +124,14 @@ export async function register(
   options: PublicKeyCredentialCreationOptionsJSON,
   timeout?: number
 ): Promise<RegistrationResponseJSON> {
-  return await invoke<RegistrationResponseJSON>("plugin:passkey|register", {
-    origin,
-    options,
-    timeout,
-  });
+  return await invoke<RegistrationResponseJSON>(
+    "plugin:dkackman-passkey|register",
+    {
+      origin,
+      options,
+      timeout,
+    }
+  );
 }
 
 /**
@@ -144,11 +147,14 @@ export async function authenticate(
   options: PublicKeyCredentialRequestOptionsJSON,
   timeout?: number
 ): Promise<PublicKeyCredentialJSON> {
-  return await invoke<PublicKeyCredentialJSON>("plugin:passkey|authenticate", {
-    origin,
-    options,
-    timeout,
-  });
+  return await invoke<PublicKeyCredentialJSON>(
+    "plugin:dkackman-passkey|authenticate",
+    {
+      origin,
+      options,
+      timeout,
+    }
+  );
 }
 
 /**
@@ -159,7 +165,7 @@ export async function authenticate(
  * @returns A promise that resolves when the pin has been sent.
  */
 export async function sendPin(pin: string): Promise<void> {
-  return await invoke("plugin:passkey|send_pin", {
+  return await invoke("plugin:dkackman-passkey|send_pin", {
     pin,
   });
 }
@@ -172,7 +178,7 @@ export async function sendPin(pin: string): Promise<void> {
  * @returns A promise that resolves once the selection has been sent.
  */
 export async function selectKey(index: number): Promise<void> {
-  return await invoke("plugin:passkey|select_key", {
+  return await invoke("plugin:dkackman-passkey|select_key", {
     key: index,
   });
 }
@@ -184,7 +190,7 @@ export async function selectKey(index: number): Promise<void> {
  * @returns A promise that resolves when the operation has been cancelled.
  */
 export async function cancel(): Promise<void> {
-  return await invoke("plugin:passkey|cancel");
+  return await invoke("plugin:dkackman-passkey|cancel");
 }
 
 /**

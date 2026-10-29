@@ -1,5 +1,5 @@
 {
-  "name": "tauri-plugin-passkey-api",
+  "name": "@dkackman/tauri-plugin-passkey-api",
   "version": "0.2.0",
   "author": "Don Kackman",
   "description": "Tauri plugin for WebAuthn / passkey (FIDO2) authentication on macOS/iOS, Windows, Android, and Linux.",
@@ -61,10 +61,11 @@
     "lint:swift": "swiftlint lint --no-cache || { command -v swiftlint >/dev/null 2>&1 && exit 1; echo 'Note: swiftlint not installed. Install with: brew install swiftlint'; }",
     "lint:kotlin": "pnpm exec ktlint 'android/src/**/*.kt'"
   },
-  "dependencies": {
-    "@tauri-apps/api": ">=2.0.0-beta.6"
+  "peerDependencies": {
+    "@tauri-apps/api": ">=2.0.0"
   },
   "devDependencies": {
+    "@tauri-apps/api": "^2.11.1",
     "@naturalcycles/ktlint": "1.16.1",
     "@rollup/plugin-typescript": "^12.3.0",
     "rollup": "^4.62.4",

@@ -1,12 +1,12 @@
 [package]
-name = "tauri-plugin-passkey"
+name = "tauri-plugin-dkackman-passkey"
 version = "0.2.0"
 authors = ["Don Kackman"]
 description = "Tauri plugin for WebAuthn / passkey (FIDO2) authentication on macOS, iOS, Windows, Android, and Linux."
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/dkackman/tauri-plugin-passkey"
 homepage = "https://github.com/dkackman/tauri-plugin-passkey"
-documentation = "https://docs.rs/tauri-plugin-passkey"
+documentation = "https://docs.rs/tauri-plugin-dkackman-passkey"
 categories = ["api-bindings", "authentication", "cryptography"]
 keywords = ["tauri", "plugin", "webauthn", "passkey", "fido2"]
 edition = "2021"
@@ -19,7 +19,7 @@ exclude = [
   "/.github",
   "/.vscode",
 ]
-links = "tauri-plugin-passkey"
+links = "tauri-plugin-dkackman-passkey"
 
 [package.metadata.docs.rs]
 default-target = "x86_64-unknown-linux-gnu"
