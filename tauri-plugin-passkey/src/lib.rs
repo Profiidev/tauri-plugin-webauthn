@@ -7,6 +7,7 @@ use tauri::{
 mod authenticators;
 mod base64url;
 mod commands;
+mod config;
 mod error;
 mod inflight;
 mod normalize;
@@ -15,6 +16,7 @@ mod validation;
 #[cfg(test)]
 mod wire_contract;
 
+pub use config::Config;
 pub use error::{Error, Result};
 
 #[cfg(not(any(
@@ -45,8 +47,8 @@ impl<R: Runtime, T: Manager<R>> crate::WebauthnExt<R> for T {
 }
 
 /// Initializes the plugin.
-pub fn init<R: Runtime>() -> TauriPlugin<R> {
-    Builder::new("passkey")
+pub fn init<R: Runtime>() -> TauriPlugin<R, Config> {
+    Builder::<R, Config>::new("passkey")
         .invoke_handler(tauri::generate_handler![
             commands::register,
             commands::authenticate,
@@ -55,6 +57,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             commands::cancel,
         ])
         .setup(|app, api| {
+            app.manage(api.config().clone());
             let webauthn = Webauthn::init(app, api)?;
             app.manage(webauthn);
             app.manage(inflight::InFlight::default());

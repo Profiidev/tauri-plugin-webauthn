@@ -44,6 +44,30 @@ pub fn validate_rp_id(origin: &Url, rp_id: &str) -> crate::Result<()> {
     }
 }
 
+/// Enforce the optional `plugins.passkey.allowedOrigins` pin. An empty list
+/// (the default) allows any origin, leaving only [`validate_rp_id`]'s checks.
+/// Otherwise the origin's ASCII serialization must equal one of the entries'
+/// — each entry is parsed as a URL and reduced to its origin, so
+/// `"https://example.com/"` and `"https://example.com"` are equivalent.
+/// Entries that do not parse are skipped (they match nothing).
+pub fn validate_origin_allowed(origin: &Url, allowed: &[String]) -> crate::Result<()> {
+    if allowed.is_empty() {
+        return Ok(());
+    }
+    let origin = origin.origin().ascii_serialization();
+    let permitted = allowed
+        .iter()
+        .filter_map(|entry| Url::parse(entry).ok())
+        .any(|entry| entry.origin().ascii_serialization() == origin);
+    if permitted {
+        Ok(())
+    } else {
+        Err(validation_error(&format!(
+            "origin {origin} is not in plugins.passkey.allowedOrigins"
+        )))
+    }
+}
+
 fn validation_error(msg: &str) -> crate::Error {
     crate::Error::Validation(msg.to_string())
 }
@@ -144,5 +168,53 @@ mod tests {
             build_client_data("webauthn.get", &challenge, &url("http://localhost:1420")).unwrap();
         let v: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
         assert_eq!(v["origin"], "http://localhost:1420");
+    }
+
+    fn allowed(entries: &[&str]) -> Vec<String> {
+        entries.iter().map(|s| s.to_string()).collect()
+    }
+
+    #[test]
+    fn empty_allowed_origins_allow_anything() {
+        assert!(validate_origin_allowed(&url("https://anything.example"), &[]).is_ok());
+    }
+
+    #[test]
+    fn exact_allowed_origin_matches() {
+        let list = allowed(&["https://example.com"]);
+        assert!(validate_origin_allowed(&url("https://example.com/login"), &list).is_ok());
+    }
+
+    #[test]
+    fn trailing_slash_entry_matches() {
+        let list = allowed(&["https://example.com/"]);
+        assert!(validate_origin_allowed(&url("https://example.com"), &list).is_ok());
+    }
+
+    #[test]
+    fn different_host_is_rejected() {
+        let list = allowed(&["https://example.com"]);
+        let err = validate_origin_allowed(&url("https://evil.com"), &list).unwrap_err();
+        assert_eq!(err.kind(), "validation");
+        assert!(err.to_string().contains("https://evil.com"), "{err}");
+        assert!(
+            err.to_string().contains("plugins.passkey.allowedOrigins"),
+            "{err}"
+        );
+    }
+
+    #[test]
+    fn different_scheme_is_rejected() {
+        let list = allowed(&["https://localhost"]);
+        let err = validate_origin_allowed(&url("http://localhost"), &list).unwrap_err();
+        assert_eq!(err.kind(), "validation");
+    }
+
+    #[test]
+    fn malformed_entry_is_skipped() {
+        let list = allowed(&["not a url", "https://example.com"]);
+        assert!(validate_origin_allowed(&url("https://example.com"), &list).is_ok());
+        let list = allowed(&["not a url"]);
+        assert!(validate_origin_allowed(&url("https://example.com"), &list).is_err());
     }
 }

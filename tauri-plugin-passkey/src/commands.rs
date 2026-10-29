@@ -5,6 +5,7 @@ use tokio::task::block_in_place;
 use webauthn_rs_proto::{PublicKeyCredentialCreationOptions, PublicKeyCredentialRequestOptions};
 
 use crate::authenticators::Authenticator;
+use crate::config::Config;
 use crate::inflight::InFlight;
 use crate::Result;
 use crate::WebauthnExt;
@@ -26,6 +27,7 @@ pub(crate) async fn register<R: Runtime>(
     let prf = crate::prf::registration_input_from_options(&options)?;
     let prf_requested = prf.is_some();
     let options: PublicKeyCredentialCreationOptions = serde_json::from_value(options)?;
+    crate::validation::validate_origin_allowed(&origin, &app.state::<Config>().allowed_origins)?;
     crate::validation::validate_rp_id(&origin, &options.rp.id)?;
     let timeout = effective_timeout(timeout, options.timeout);
     // Held until the ceremony returns; a concurrent ceremony gets `busy`.
@@ -53,6 +55,7 @@ pub(crate) async fn authenticate<R: Runtime>(
     let prf = crate::prf::authentication_input_from_options(&options)?;
     let prf_requested = prf.is_some();
     let options: PublicKeyCredentialRequestOptions = serde_json::from_value(options)?;
+    crate::validation::validate_origin_allowed(&origin, &app.state::<Config>().allowed_origins)?;
     crate::validation::validate_rp_id(&origin, &options.rp_id)?;
     let timeout = effective_timeout(timeout, options.timeout);
     // Held until the ceremony returns; a concurrent ceremony gets `busy`.
