@@ -11,7 +11,7 @@ jobs:
       contents: read
     environment: ${{ github.event.pull_request.head.repo.full_name == github.repository && 'internal-ci' || 'external-ci' }}
     steps:
-      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3
         id: app-token
         if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
         with:
@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ github.event.pull_request.head.ref }}
-      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
 
       - name: refresh apt index (ubuntu only)
         if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
@@ -34,7 +34,7 @@ jobs:
 
       - name: Cache cargo and rust files
         id: rust_cache
-        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
         with:
           cache-on-failure: true
           shared-key: "linter_cache"
@@ -45,7 +45,7 @@ jobs:
           useLockFile: false
 
       - name: Run linters
-        uses: profiidev/rust-lint-action@6592fe2b81f52c155bc416c51b6a860196a96f48 # v4
+        uses: profiidev/rust-lint-action@16801b02ca2bc0441e458d7f713d8a0e8d417927 # v4
         with:
           auto_fix: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
           rustfmt: true

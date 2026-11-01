@@ -15,7 +15,7 @@ jobs:
     environment: release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3
         id: app-token
         with:
           client-id: ${{ secrets.COMMIT_BOT_CLIENT_ID }}
@@ -26,7 +26,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+        uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
 
       - name: refresh apt index (ubuntu only)
         run: sudo apt-get update
@@ -38,18 +38,18 @@ jobs:
 
       - name: Cache cargo and rust files
         id: rust_cache
-        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
         with:
           cache-on-failure: true
           shared-key: "release"
 
       - name: Run release-plz
-        uses: MarcoIeni/release-plz-action@b8d6b54b02889ff2ae2bb82e8b57c3a8fc1683a5 # v0.5
+        uses: MarcoIeni/release-plz-action@f67a7e724bdad4a0f6875f186060a0ca2770d76c # v0.5
         id: release
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         if: ${{ steps.release.outputs.releases_created == 'true' }}
         with:
           node-version: 24
