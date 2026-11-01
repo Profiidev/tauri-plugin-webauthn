@@ -112,8 +112,8 @@ impl AuthenticatorExt for AuthenticatorService {
     Ok(webauthn_rs_proto::RegisterPublicKeyCredential {
       extensions: convert_response_registration_extensions(result.extensions),
       response: webauthn_rs_proto::AuthenticatorAttestationResponseRaw {
-        attestation_object: serde_cbor_2::to_vec(&result.att_obj)?.into(),
-        client_data_json: Base64UrlSafeData::from(client_data),
+        attestation_object: serde_cbor_2::to_vec(&result.att_obj)?,
+        client_data_json: Base64UrlSafeData::from(client_data).to_vec(),
         transports: Some(vec![
           AuthenticatorTransport::Usb,
           AuthenticatorTransport::Nfc,
@@ -122,7 +122,7 @@ impl AuthenticatorExt for AuthenticatorService {
         ]),
       },
       id: String::new(),
-      raw_id: Vec::new().into(),
+      raw_id: Vec::new(),
       type_: "public-key".to_string(),
     })
   }
@@ -178,13 +178,13 @@ impl AuthenticatorExt for AuthenticatorService {
 
     Ok(PublicKeyCredential {
       id: BASE64_URL_SAFE_NO_PAD.encode(&raw_id),
-      raw_id: raw_id.into(),
+      raw_id,
       type_: "public-key".to_string(),
       response: webauthn_rs_proto::AuthenticatorAssertionResponseRaw {
-        client_data_json: Base64UrlSafeData::from(client_data),
+        client_data_json: Base64UrlSafeData::from(client_data).to_vec(),
         authenticator_data: data[2..].into(),
-        signature: result.assertion.signature.into(),
-        user_handle: result.assertion.user.map(|h| h.id.into()),
+        signature: result.assertion.signature,
+        user_handle: result.assertion.user.map(|h| h.id),
       },
       extensions: convert_response_authentication_extensions(result.extensions),
     })
@@ -234,8 +234,8 @@ fn convert_response_authentication_extensions(
     hmac_get_secret: extensions
       .hmac_get_secret
       .map(|h| webauthn_rs_proto::HmacGetSecretOutput {
-        output1: h.output1.to_vec().into(),
-        output2: h.output2.map(|s| s.to_vec().into()),
+        output1: h.output1.to_vec(),
+        output2: h.output2.map(|s| s.to_vec()),
       }),
   }
 }
