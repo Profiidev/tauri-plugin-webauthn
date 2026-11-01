@@ -124,7 +124,7 @@ async fn auth_finish(
     .take()
     .panic_log("Failed to get passkey authentication state");
   webauthn
-    .finish_discoverable_authentication(&response, passkey_auth, &[passkey.into()])
+    .finish_discoverable_authentication_v2(&response, passkey_auth, passkey)
     .panic_log("Failed to finish authentication");
   Ok(())
 }
