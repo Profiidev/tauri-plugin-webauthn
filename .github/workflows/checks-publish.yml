@@ -1,0 +1,34 @@
+name: Publish Lint Results
+on:
+  workflow_run:
+    workflows: [Checks and Validation]
+    types: [completed]
+
+jobs:
+  publish:
+    name: Publish lint results
+    runs-on: ubuntu-latest
+    # Only fork PRs upload results, PRs from this repo create their check runs directly.
+    # Never check out or run code from the PR here, this job has a write token
+    if: github.event.workflow_run.head_repository.full_name != github.repository
+    permissions:
+      actions: read
+      checks: write
+    steps:
+      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
+        id: app-token
+        with:
+          client-id: ${{ secrets.COMMIT_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.COMMIT_BOT_PRIVATE_KEY }}
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: lint-results
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - name: Publish lint results
+        uses: profiidev/rust-lint-action@7185d73733d1ab71a15c74934a2349622ad60740 # v4
+        with:
+          publish_results: lint-results.json
+          github_token: ${{ steps.app-token.outputs.token }}

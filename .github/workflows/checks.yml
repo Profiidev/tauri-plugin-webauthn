@@ -1,6 +1,6 @@
 name: Checks and Validation
 on:
-  pull_request_target:
+  pull_request:
 
 jobs:
   linters:
@@ -8,51 +8,56 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       checks: write
-      contents: read
-    environment: ${{ github.event.pull_request.head.repo.full_name == github.repository && 'internal-ci' || 'external-ci' }}
+      contents: write
     steps:
-      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3
+      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
         id: app-token
-        if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+        if: github.event.pull_request.head.repo.full_name == github.repository
         with:
           client-id: ${{ secrets.COMMIT_BOT_CLIENT_ID }}
           private-key: ${{ secrets.COMMIT_BOT_PRIVATE_KEY }}
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
-      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+          components: clippy,rustfmt
 
       - name: refresh apt index (ubuntu only)
-        if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
         run: sudo apt-get update
 
       - uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # latest
-        if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
         with:
           packages: libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libudev-dev libpcsclite-dev
           version: 1.2
 
       - name: Cache cargo and rust files
         id: rust_cache
-        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
         with:
           cache-on-failure: true
           shared-key: "linter_cache"
-          save-if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
       - uses: bahmutov/npm-install@v1
-        if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
         with:
           useLockFile: false
 
       - name: Run linters
-        uses: profiidev/rust-lint-action@16801b02ca2bc0441e458d7f713d8a0e8d417927 # v4
+        uses: profiidev/rust-lint-action@7185d73733d1ab71a15c74934a2349622ad60740 # v4
         with:
-          auto_fix: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
           rustfmt: true
           clippy: true
           clippy_args: "--all-targets"
           prettier: true
           prettier_extensions: "css,html,js,json,jsx,md,sass,scss,ts,tsx,vue,yaml,yml,svelte"
           oxlint: true
+          auto_fix: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+          continue_on_error: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+          results_file: ${{ github.event.pull_request.head.repo.full_name != github.repository && 'lint-results.json' || '' }}
           git_sign_commits: true
-          github_token: ${{ github.event.pull_request.head.repo.full_name == github.repository && steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
+          github_token: ${{ steps.app-token.outputs.token || github.token }}
+
+      - name: Upload lint results
+        if: always() && github.event.pull_request.head.repo.full_name != github.repository
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: lint-results
+          path: lint-results.json
+          retention-days: 5
