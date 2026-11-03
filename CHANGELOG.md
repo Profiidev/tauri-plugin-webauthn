@@ -2,6 +2,47 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1] - 2026-11-03
+
+### 🐛 Bug Fixes
+
+- Lints
+- _(deps)_ Update rust crate openssl to 0.10.78 [security] ([#60](https://github.com/Profiidev/tauri-plugin-webauthn/pull/60))
+- _(deps)_ Update rust crate tauri to 2.11.1 [security] ([#63](https://github.com/Profiidev/tauri-plugin-webauthn/pull/63))
+- _(deps)_ Update rust crate webauthn-authenticator-rs to 0.5.5 [security] ([#65](https://github.com/Profiidev/tauri-plugin-webauthn/pull/65))
+- _(deps)_ Update rust crate openssl to 0.10.79 [security] ([#64](https://github.com/Profiidev/tauri-plugin-webauthn/pull/64))
+- _(deps)_ Update rust crate openssl to 0.10.80 [security] ([#69](https://github.com/Profiidev/tauri-plugin-webauthn/pull/69))
+- _(deps)_ Update all non-major dependencies
+- _(deps)_ Update rust crate tokio to 1.54.1 [security] ([#91](https://github.com/Profiidev/tauri-plugin-webauthn/pull/91))
+- _(deps)_ Update all non-major dependencies ([#95](https://github.com/Profiidev/tauri-plugin-webauthn/pull/95))
+
+### ⚙️ Miscellaneous Tasks
+
+- Fix pipeline for fork prs
+- Use pull_request_target instead of pull_request event
+- Npm trusted publish
+- Added devenv
+- Fix fork prs
+- Fix permissions
+- Fix gh token
+- Added oxlint
+- Use github app
+- Ignore deps
+- Shared renovate config
+- Fix code style issues with prettier
+- Updated oxlint tsgo
+- Fix lints
+- Fix apt install
+- Fix checks apt install
+- Fix apt update
+- Use normal pr event
+- Use pr target event
+- Renovate
+- Fix renovate env
+- Fix renovate env
+- No more pr target trigger
+- Remove envs
+
 ## [0.2.0] - 2025-05-16
 
 ### 🚀 Features
