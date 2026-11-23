@@ -7,15 +7,16 @@ jobs:
     name: Run linters
     runs-on: ubuntu-latest
     permissions:
+      id-token: write
       checks: write
       contents: write
     steps:
-      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
+      - uses: profiidev/gluon@d715c4a8bd804db764307ad041e73c1c60ec7382 # v0
         id: app-token
         if: github.event.pull_request.head.repo.full_name == github.repository
         with:
-          client-id: ${{ secrets.COMMIT_BOT_CLIENT_ID }}
-          private-key: ${{ secrets.COMMIT_BOT_PRIVATE_KEY }}
+          url: https://gluon.profidev.io
+          profile: lint
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
         with:
@@ -35,7 +36,7 @@ jobs:
         with:
           cache-on-failure: true
           shared-key: "linter_cache"
-      - uses: bahmutov/npm-install@v1
+      - uses: bahmutov/npm-install@20216767ca67f0f7b4d095dc5859c5700a6581cb # v1.12.1
         with:
           useLockFile: false
 

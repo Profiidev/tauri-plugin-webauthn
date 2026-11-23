@@ -11,15 +11,17 @@ permissions:
 
 jobs:
   release-plz:
+    permissions:
+      id-token: write
+      contents: read
     name: Release-plz
     environment: release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3
+      - uses: profiidev/gluon@d715c4a8bd804db764307ad041e73c1c60ec7382 # v0
         id: app-token
         with:
-          client-id: ${{ secrets.COMMIT_BOT_CLIENT_ID }}
-          private-key: ${{ secrets.COMMIT_BOT_PRIVATE_KEY }}
+          url: https://gluon.profidev.io
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -54,7 +56,7 @@ jobs:
         with:
           node-version: 26
           registry-url: "https://registry.npmjs.org"
-      - uses: bahmutov/npm-install@v1
+      - uses: bahmutov/npm-install@20216767ca67f0f7b4d095dc5859c5700a6581cb # v1.12.1
         if: ${{ steps.release.outputs.releases_created == 'true' }}
         with:
           useLockFile: false
